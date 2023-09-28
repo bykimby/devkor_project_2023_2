@@ -15,7 +15,7 @@ import java.util.ArrayList;
 @RequestMapping("/customer/baby")
 @RestController
 public class BabyController {
-    private BabyService babyService;
+    private final BabyService babyService;
     //Todo
     //아기 등록, 아기 정보 수정
     @PostMapping("/enroll")

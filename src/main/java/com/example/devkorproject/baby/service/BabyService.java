@@ -31,7 +31,10 @@ public class BabyService {
                 .needs(babyReqDto.getNeeds())
                 .build();
         babyRepository.save(babyEntity);
-        BabyResDto babyResDto=new BabyResDto();
+        BabyResDto babyResDto=new BabyResDto(babyReqDto.getBabyName(),
+                babyReqDto.getBirth(),
+                babyReqDto.getAllergy(),
+                babyReqDto.getNeeds());
         return babyResDto;
     }
     public BabyModifyResDto modifyBaby(BabyModifyReqDto babyModifyReqDto){

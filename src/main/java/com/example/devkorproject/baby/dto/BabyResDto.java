@@ -7,5 +7,8 @@ import lombok.*;
 @Getter
 @Setter
 public class BabyResDto {
-
+    private String babyName;
+    private String birth;
+    private String allergy;
+    private String needs;
 }
