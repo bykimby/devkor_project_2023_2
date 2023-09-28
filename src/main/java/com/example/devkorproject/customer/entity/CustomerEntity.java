@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class CustomerEntity {
     private String password;
 
     @Column(name = "image")
-    private MultipartFile image;
+    private String imageUrl;
 
     @Column(name = "rank", nullable = false)
     private String rank;
@@ -53,7 +54,4 @@ public class CustomerEntity {
     
     @OneToMany(mappedBy = "customer")
     private List<DietEntity> diets = new ArrayList<DietEntity>();
-    //연관관계메소드?
-    //생성메소드??
-
 }

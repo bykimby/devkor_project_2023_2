@@ -1,10 +1,10 @@
 package com.example.devkorproject.post.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.example.devkorproject.customer.entity.CustomerEntity;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -36,7 +36,7 @@ public class PostEntity {
     private String category;
 
     @Column(name = "photo")
-    private MultipartFile photo;
+    private String photoUrl;
 
     @Column(name = "scrap", nullable = false)
     private Long scrap;
@@ -46,5 +46,5 @@ public class PostEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customerId")
-    private Customer customer;
+    private CustomerEntity customer;
 }

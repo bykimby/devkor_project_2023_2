@@ -53,7 +53,7 @@ public class DietEntity {
     private String keyword;
 
     @Column(name = "image", nullable = false)
-    private MultipartFile image;
+    private String imageUrl;
 
     @Column(name = "date", nullable = false)
     private LocalDate date;
