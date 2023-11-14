@@ -4,7 +4,6 @@ import com.example.devkorproject.baby.entity.BabyEntity;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
