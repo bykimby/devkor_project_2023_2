@@ -47,11 +47,14 @@ public class CustomerEntity {
     private Long myComments;
 
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
     private List<BabyEntity> babies = new ArrayList<BabyEntity>();
 
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
     private List<PostEntity> posts = new ArrayList<PostEntity>();
     
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
     private List<DietEntity> diets = new ArrayList<DietEntity>();
 }

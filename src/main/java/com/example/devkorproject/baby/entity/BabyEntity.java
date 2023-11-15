@@ -37,6 +37,7 @@ public class BabyEntity {
     private CustomerEntity customer;
 
     @OneToMany(mappedBy = "baby",orphanRemoval = true)
+    @Builder.Default
     private List<DietEntity> diets = new ArrayList<DietEntity>();
 
 }

@@ -1,11 +1,16 @@
 package com.example.devkorproject.diet.service;
+import com.example.devkorproject.baby.entity.BabyEntity;
+import com.example.devkorproject.baby.exception.BabyDoesNotExistException;
+import com.example.devkorproject.baby.repository.BabyRepository;
+import com.example.devkorproject.customer.entity.CustomerEntity;
+import com.example.devkorproject.customer.exception.CustomerDoesNotExistException;
+import com.example.devkorproject.customer.repository.CustomerRepository;
 import com.example.devkorproject.diet.config.ChatGptConfig;
 import com.example.devkorproject.diet.dto.*;
 import com.example.devkorproject.diet.entity.DietEntity;
 import com.example.devkorproject.diet.repository.DietRepository;
 
-import lombok.*;
-
+import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,20 +19,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
-
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-@RequiredArgsConstructor
+import java.util.Optional;
+
 @Service
 public class DietService {
 
     private final DietRepository dietRepository;
+    private final BabyRepository babyRepository;
+    private final CustomerRepository customerRepository;
+    public DietService(DietRepository dietRepository, BabyRepository babyRepository, CustomerRepository customerRepository) {
+        this.dietRepository = dietRepository;
+        this.babyRepository = babyRepository;
+        this.customerRepository =  customerRepository;
+    }
 
     @Autowired
     private final RestTemplate restTemplate = new RestTemplate();
-
     @Value("${apikey.chatgpt}")
     private String apiKey;
 //
@@ -38,7 +48,6 @@ public class DietService {
         httpHeaders.add(ChatGptConfig.AUTHORIZATION, ChatGptConfig.BEARER + apiKey);
         return new HttpEntity<>(chatGptRequest, httpHeaders);
     }
-
     public GptResDto getResponse(HttpEntity<GptReqDto> chatGptRequestHttpEntity){
 
         ResponseEntity<GptResDto> responseEntity = restTemplate.postForEntity(
@@ -48,7 +57,6 @@ public class DietService {
 
         return responseEntity.getBody();
     }
-
     public DietResDto[] splitMessage(String message){
         DietResDto[] diets = new DietResDto[3];
 
@@ -71,10 +79,18 @@ public class DietService {
         String fridge = dietRequestDto.getFridge();
         String keyword = dietRequestDto.getKeyword();
         String type = dietRequestDto.getType();
-        String question =  fridge +
-                "를 활용한 " +
-                keyword +
-                " " +
+        String fridgeMessage = "";
+        String keywordMessage = "";
+
+        if(fridge != null){
+            fridgeMessage = fridge + "를 활용한";
+        }
+        if(keyword != null){
+            keywordMessage = keyword + " ";
+        }
+
+        String question =  fridgeMessage +
+                keywordMessage +
                 type +
                 "의 (메뉴명:),(설명:),(재료:),(레시피:),(소요시간(분):),(난이도:)를 한 줄씩 알려줘. " +
                 "재료는 그람수 단위로 자세하게 한 줄로 알려주고, " +
@@ -103,9 +119,22 @@ public class DietService {
 
         DietResDto[] diets = splitMessage(message);
 
+        Optional<CustomerEntity> opCustomerEntity = customerRepository.findCustomerEntityByCustomerId(dietRequestDto.getCustomerId());
+        if(opCustomerEntity.isEmpty())
+            throw new CustomerDoesNotExistException();
+        CustomerEntity customerEntity = opCustomerEntity.get();
+
+        Optional<BabyEntity> opBabyEntity = babyRepository.findBabyEntityByBabyId(dietRequestDto.getBabyId());
+        if(opBabyEntity.isEmpty())
+            throw new BabyDoesNotExistException();
+        BabyEntity babyEntity = opBabyEntity.get();
+
+        if(customerEntity.getCustomerId() != dietRequestDto.getCustomerId()){
+            throw new CustomerDoesNotMatchException();
+        }
+
         //현재 날짜 구하기
         LocalDate now = LocalDate.now();
-
         String imageUrl = "image";
         for(int i = 0; i < 3; i++) {
             DietEntity dietEntity = DietEntity.builder()
@@ -117,11 +146,13 @@ public class DietService {
                     .time(Long.parseLong(diets[i].getTime()))
                     .info(type) //간식 or 식사
                     .available(fridge) //냉장고 재료
+                    .allergy(babyEntity.getAllergy())
+                    .needs(babyEntity.getNeeds())
+                    .keyword(keyword)//#빨리 먹을 수 있는
                     .imageUrl(imageUrl)
-//                .allergy()
-//                .needs()
-                    .keyword(keyword) //#빨리 먹을 수 있는
                     .date(now)
+                    .customer(customerEntity)
+                    .baby(babyEntity)
                     .build();
             dietRepository.save(dietEntity);
         }

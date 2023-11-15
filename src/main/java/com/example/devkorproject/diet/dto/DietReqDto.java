@@ -12,6 +12,8 @@ import java.io.Serializable;
 @Getter
 @Setter
 public class DietReqDto implements Serializable {
+    private Long customerId;
+    private Long babyId;
     private String type;
     private String fridge;
     private String keyword;

@@ -9,4 +9,5 @@ import java.util.Optional;
 
 @Component
 public interface DietRepository extends JpaRepository<DietEntity,Long> {
+
 }
