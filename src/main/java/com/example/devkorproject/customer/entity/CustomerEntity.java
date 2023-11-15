@@ -46,12 +46,12 @@ public class CustomerEntity {
     @Column(name = "myComments", nullable = false)
     private Long myComments;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
     private List<BabyEntity> babies = new ArrayList<BabyEntity>();
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
     private List<PostEntity> posts = new ArrayList<PostEntity>();
     
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
     private List<DietEntity> diets = new ArrayList<DietEntity>();
 }

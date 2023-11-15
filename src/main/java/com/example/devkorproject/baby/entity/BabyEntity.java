@@ -36,7 +36,7 @@ public class BabyEntity {
     @JoinColumn(name = "customerId")
     private CustomerEntity customer;
 
-    @OneToMany(mappedBy = "baby")
+    @OneToMany(mappedBy = "baby",orphanRemoval = true)
     private List<DietEntity> diets = new ArrayList<DietEntity>();
 
 }

@@ -5,6 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 public class BabyReqDto {
+    private Long customerId;
     private String babyName;
     private String birth;
     private String allergy;

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/customer/baby")
@@ -26,5 +27,9 @@ public class BabyController {
     @PutMapping("")
     public HttpDataResponse<BabyModifyResDto> modifyBaby(@RequestBody BabyModifyReqDto babyModifyReqDto){
         return HttpDataResponse.of(babyService.modifyBaby(babyModifyReqDto));
+    }
+    @GetMapping("")
+    public HttpDataResponse<List<BabyModifyResDto>> getCustomerBaby(@RequestHeader Long customerId){
+        return HttpDataResponse.of(babyService.getCustomerBaby(customerId));
     }
 }

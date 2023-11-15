@@ -14,11 +14,15 @@ import static org.springframework.http.HttpMethod.values;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
-    OK(0, HttpStatus.OK, "Ok"),
+    OK(0, HttpStatus.OK, "OK"),
     BAD_REQUEST(10000, HttpStatus.BAD_REQUEST, "Bad request"),
     INTERNAL_ERROR(20000, HttpStatus.INTERNAL_SERVER_ERROR, "Internal error"),
     NOT_FOUND(10001, HttpStatus.NOT_FOUND, "Requested resource is not found"),
-    BABY_DOES_NOT_EXIST(10001, HttpStatus.BAD_REQUEST, "Requested baby is not found")
+    BABY_DOES_NOT_EXIST(10001, HttpStatus.BAD_REQUEST, "Requested baby is not found"),
+    CUSTOMER_DOES_NOT_EXIST(10001, HttpStatus.BAD_REQUEST, "Requested customer is not found"),
+    POST_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested post is not found"),
+    CUSTOMER_DOES_NOT_MATCH(10001,HttpStatus.BAD_REQUEST,"Requested customer does not match"),
+    FRIDGE_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested fridge does not found")
     ;
     private final Integer code;
     private final HttpStatus httpStatus;
