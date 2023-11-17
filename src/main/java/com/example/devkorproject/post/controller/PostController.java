@@ -30,7 +30,7 @@ public class PostController {
     }
 
     @GetMapping("/keyword")
-    public HttpDataResponse<List<PostRes>> keywordSearchPost(@RequestParam String keyword){
+    public HttpDataResponse<List<GetPostRes>> keywordSearchPost(@RequestParam String keyword){
         return HttpDataResponse.of(postService.keywordSearchPost(keyword));
     }
 

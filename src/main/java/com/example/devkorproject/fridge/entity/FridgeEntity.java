@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -17,7 +18,7 @@ public class FridgeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long frigeId;
     private String ingredients;
-    private LocalDate date;
+    private LocalDateTime date;
     @ManyToOne
     @JoinColumn(name="customerId")
     private CustomerEntity customer;

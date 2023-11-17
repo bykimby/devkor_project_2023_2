@@ -3,9 +3,12 @@ package com.example.devkorproject.post.entity;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.awt.*;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -18,9 +21,9 @@ public class PostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postId;
-
+    @UpdateTimestamp
     @Column(name = "updateDate", nullable = false)
-    private LocalDate updateDate;
+    private LocalDateTime updateDate;
 
     @Column(name = "comments", nullable = false)
     private Long comments;

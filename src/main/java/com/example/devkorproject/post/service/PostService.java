@@ -13,7 +13,9 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +45,7 @@ public class PostService {
             throw new CustomerDoesNotExistException();
         CustomerEntity customer=opCustomer.get();
         PostEntity postEntity=PostEntity.builder()
-                .updateDate(LocalDate.now())
+                .updateDate(LocalDateTime.now())
                 .comments(postReq.getComments())
                 .likes(postReq.getLikes())
                 .title(postReq.getTitle())
@@ -74,7 +76,7 @@ public class PostService {
                 postEntity.getType()
         );
     }
-    public List<PostRes> keywordSearchPost(String keyword){
+    public List<GetPostRes> keywordSearchPost(String keyword){
         List<PostEntity> foundPosts=postRepository.findByTitleContainingOrBodyContaining(keyword,keyword);
         if(foundPosts.isEmpty())
             throw new PostDoesNotExistException();
@@ -82,17 +84,14 @@ public class PostService {
             List<byte[]> photos=post.getPhotos().stream()
                     .map(PhotoEntity::getData)
                     .collect(Collectors.toList());
-            return new PostRes(
+            return new GetPostRes(
                 post.getPostId(),
                 post.getUpdateDate(),
                 post.getComments(),
                 post.getLikes(),
                 post.getTitle(),
-                post.getBody(),
-                photos,
-                post.getCategory(),
-                post.getScrap(),
-                post.getType()
+                post.getType(),
+                post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
@@ -173,7 +172,7 @@ public class PostService {
             photos.add(photo);
         }
         PostEntity foundPost=postEntity.get();
-        foundPost.setUpdateDate(LocalDate.now());
+        //foundPost.setUpdateDate(LocalDateTime.now());
         foundPost.setComments(postUpdateReq.getComments());
         foundPost.setLikes(postUpdateReq.getLikes());
         foundPost.setTitle(postUpdateReq.getTitle());
