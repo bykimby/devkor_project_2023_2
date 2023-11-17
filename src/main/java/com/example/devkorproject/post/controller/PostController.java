@@ -19,24 +19,28 @@ public class PostController {
     public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
         return HttpDataResponse.of(postService.createPost(postReq));
     }
+    @GetMapping("/unique")
+    public HttpDataResponse<PostRes> getUniquePost(@RequestParam Long postId){
+        return HttpDataResponse.of(postService.getUniquePost(postId));
+    }
     @GetMapping("")
-    public HttpDataResponse<List<PostRes>> getAllPosts(){
-        return HttpDataResponse.of(postService.getAllPosts());
+    public HttpDataResponse<List<GetPostRes>> getAllPosts(@RequestParam Long startPostId){
+        return HttpDataResponse.of(postService.getAllPosts(startPostId));
     }
 
     @GetMapping("/customer")
-    public HttpDataResponse<List<PostRes>> getCustomerPosts(@RequestHeader("customerId") Long customerId){
-        return HttpDataResponse.of(postService.getCustomerPosts(customerId));
+    public HttpDataResponse<List<GetPostRes>> getCustomerPosts(@RequestHeader("customerId") Long customerId,@RequestParam Long startPostId){
+        return HttpDataResponse.of(postService.getCustomerPosts(customerId,startPostId));
     }
 
     @GetMapping("/keyword")
-    public HttpDataResponse<List<GetPostRes>> keywordSearchPost(@RequestParam String keyword){
-        return HttpDataResponse.of(postService.keywordSearchPost(keyword));
+    public HttpDataResponse<List<GetPostRes>> keywordSearchPost(@RequestParam String keyword,Long startPostId){
+        return HttpDataResponse.of(postService.keywordSearchPost(keyword,startPostId));
     }
 
     @GetMapping("/type")
-    public HttpDataResponse<List<PostRes>> typeSearchPost(@RequestParam String type) {
-        return HttpDataResponse.of(postService.typeSearchPost(type));
+    public HttpDataResponse<List<GetPostRes>> typeSearchPost(@RequestParam String type,Long startPostId) {
+        return HttpDataResponse.of(postService.typeSearchPost(type,startPostId));
     }
 
     @PutMapping("")

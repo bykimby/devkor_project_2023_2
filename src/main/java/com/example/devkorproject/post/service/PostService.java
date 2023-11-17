@@ -12,14 +12,8 @@ import com.example.devkorproject.post.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,7 +44,6 @@ public class PostService {
                 .likes(postReq.getLikes())
                 .title(postReq.getTitle())
                 .body(postReq.getBody())
-                .category(postReq.getCategory())
                 .photos(photos)
                 .scrap(postReq.getScrap())
                 .type(postReq.getType())
@@ -71,93 +64,160 @@ public class PostService {
                 postEntity.getTitle(),
                 postEntity.getBody(),
                 photosByte,
-                postEntity.getCategory(),
                 postEntity.getScrap(),
                 postEntity.getType()
         );
     }
-    public List<GetPostRes> keywordSearchPost(String keyword){
-        List<PostEntity> foundPosts=postRepository.findByTitleContainingOrBodyContaining(keyword,keyword);
-        if(foundPosts.isEmpty())
-            throw new PostDoesNotExistException();
+    public List<GetPostRes> keywordSearchPost(String keyword,Long startPostId){
+        List<PostEntity> foundPosts;
+        if(startPostId==0){
+            foundPosts=postRepository.findTop20ByTitleContainingOrBodyContainingOrderByUpdateDateDesc(keyword,keyword);
+        }
+        else{
+            Optional<PostEntity> startPost = postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new PostDoesNotExistException();
+            foundPosts = postRepository.findNext20ByTitleContainingOrBodyContainingAndUpdateDateBeforeOrderByUpdateDateDesc(
+                        keyword, keyword, startPost.get().getUpdateDate());
+        }
         return foundPosts.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
             return new GetPostRes(
                 post.getPostId(),
-                post.getUpdateDate(),
+                post.getUpdateDate().toString(),
                 post.getComments(),
                 post.getLikes(),
                 post.getTitle(),
+                photo,
                 post.getType(),
                 post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
-    public List<PostRes> typeSearchPost(String type){
-        List<PostEntity> foundPosts=postRepository.findByCategory(type);
-        if(foundPosts.isEmpty())
-            throw new PostDoesNotExistException();
+    public List<GetPostRes> typeSearchPost(String type,Long startPostId){
+        List<PostEntity> foundPosts;
+        if(startPostId==0){
+            foundPosts = postRepository.findTop20ByTypeOrderByUpdateDateDesc(type);
+        }else{
+            Optional<PostEntity> startPost=postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new PostDoesNotExistException();
+            foundPosts=postRepository.findTop20ByTypeAndUpdateDateBeforeOrderByUpdateDateDesc(type, startPost.get().getUpdateDate());
+        }
         return foundPosts.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
+            return new GetPostRes(
                     post.getPostId(),
-                    post.getUpdateDate(),
+                    post.getUpdateDate().toString(),
                     post.getComments(),
                     post.getLikes(),
                     post.getTitle(),
-                    post.getBody(),
-                    photos,
-                    post.getCategory(),
-                    post.getScrap(),
-                    post.getType()
+                    photo,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
-    public List<PostRes> getAllPosts(){
-        List<PostEntity> postEntities=postRepository.findAll();
+    public List<GetPostRes> getAllPosts(Long startPostId){
+        List<PostEntity> postEntities;
+        if (startPostId == 0) {
+            postEntities = postRepository.findTop20ByOrderByUpdateDateDesc();
+        } else {
+            Optional<PostEntity> startPost = postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new PostDoesNotExistException();
+            postEntities = postRepository.findTop20ByUpdateDateBeforeOrderByUpdateDateDesc(startPost.get().getUpdateDate());
+        }
         return postEntities.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
+            return new GetPostRes(
                     post.getPostId(),
-                    post.getUpdateDate(),
+                    post.getUpdateDate().toString(),
                     post.getComments(),
                     post.getLikes(),
                     post.getTitle(),
-                    post.getBody(),
-                    photos,
-                    post.getCategory(),
-                    post.getScrap(),
-                    post.getType()
+                    photo,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
-    public List<PostRes> getCustomerPosts(Long customerId) {
-        List<PostEntity> postEntities = postRepository.findByCustomer_CustomerId(customerId);
-        if(postEntities.isEmpty())
+    public List<GetPostRes> getCustomerPosts(Long customerId,Long startPostId) {
+        List<PostEntity> postEntities;
+        if(startPostId==0){
+            postEntities = postRepository.findTop20ByCustomer_CustomerIdOrderByUpdateDateDesc(customerId);
+        } else{
+            Optional<PostEntity> startPost = postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new PostDoesNotExistException();
+            postEntities = postRepository.findNext20ByCustomer_CustomerIdAndUpdateDateBeforeOrderByUpdateDateDesc(
+                        customerId, startPost.get().getUpdateDate());
+        }
+        return postEntities.stream().map(post -> {
+            byte[] firstPhotoData = post.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .findFirst()
+                    .orElse(null);
+
+            List<byte[]> photos = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photos.add(firstPhotoData);
+            }
+            return new GetPostRes(
+                    post.getPostId(),
+                    post.getUpdateDate().toString(),
+                    post.getComments(),
+                    post.getLikes(),
+                    post.getTitle(),
+                    photos,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
+            );
+        }).collect(Collectors.toList());
+    }
+    public PostRes getUniquePost(Long postId){
+        Optional<PostEntity> opfoundPost=postRepository.findById(postId);
+        if(opfoundPost.isEmpty())
             throw new PostDoesNotExistException();
-        return postEntities.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
-                    .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
-                    post.getPostId(),
-                    post.getUpdateDate(),
-                    post.getComments(),
-                    post.getLikes(),
-                    post.getTitle(),
-                    post.getBody(),
-                    photos,
-                    post.getCategory(),
-                    post.getScrap(),
-                    post.getType()
-            );
-        }).collect(Collectors.toList());
+        PostEntity foundPost=opfoundPost.get();
+        List<byte[]> photosByte = foundPost.getPhotos().stream()
+                .map(PhotoEntity::getData)
+                .collect(Collectors.toList());
+        return new PostRes(
+                foundPost.getPostId(),
+                foundPost.getUpdateDate(),
+                foundPost.getComments(),
+                foundPost.getLikes(),
+                foundPost.getTitle(),
+                foundPost.getBody(),
+                photosByte,
+                foundPost.getScrap(),
+                foundPost.getType()
+        );
     }
     public PostRes updatePost(PostUpdateReq postUpdateReq){
         Optional<PostEntity> postEntity=postRepository.findById(postUpdateReq.getPostId());
@@ -177,7 +237,7 @@ public class PostService {
         foundPost.setLikes(postUpdateReq.getLikes());
         foundPost.setTitle(postUpdateReq.getTitle());
         foundPost.setBody(postUpdateReq.getBody());
-        foundPost.setCategory(postUpdateReq.getCategory());
+        //foundPost.setCategory(postUpdateReq.getCategory());
         foundPost.setPhotos(photos);
         foundPost.setType(postUpdateReq.getType());
         foundPost.setScrap(postUpdateReq.getScrap());
@@ -192,7 +252,6 @@ public class PostService {
                 foundPost.getTitle(),
                 foundPost.getBody(),
                 photosByte,
-                foundPost.getCategory(),
                 foundPost.getScrap(),
                 foundPost.getType()
         );

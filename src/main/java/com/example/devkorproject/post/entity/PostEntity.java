@@ -37,9 +37,6 @@ public class PostEntity {
     @Column(name = "body", nullable = false, length = 500)
     private String body;
 
-    @Column(name = "category", nullable = false)
-    private String category;
-
     @Column(name = "scrap", nullable = false)
     private Long scrap;
 

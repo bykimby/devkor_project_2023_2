@@ -17,7 +17,6 @@ public class PostRes {
     private String title;
     private String body;
     private List<byte[]> photos;
-    private String category;
     private Long scrap;
     private String type;
 }
