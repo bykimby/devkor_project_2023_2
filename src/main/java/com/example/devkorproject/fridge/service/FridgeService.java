@@ -16,6 +16,7 @@ import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ public class FridgeService {
         CustomerEntity customer=opCustomer.get();
         FridgeEntity fridgeEntity=FridgeEntity.builder()
                                     .customer(customer)
+                                    .date(LocalDate.now())
                                     .ingredients(fridgeDto.getIngredients())
                                     .build();
         fridgeRepository.save(fridgeEntity);
