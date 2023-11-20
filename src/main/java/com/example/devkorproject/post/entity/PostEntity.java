@@ -1,6 +1,7 @@
 package com.example.devkorproject.post.entity;
 
 import com.example.devkorproject.customer.entity.CustomerEntity;
+import com.example.devkorproject.post.dto.CommentRes;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -9,7 +10,9 @@ import java.awt.*;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -42,7 +45,8 @@ public class PostEntity {
 
     @Column(name = "type", nullable = false)
     private String type;
-
+    @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
+    private Set<CommentEntity> commentEntities=new HashSet<>();
     @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
     private Set<PhotoEntity> photos;
     //중복 x 허용하는 것으로 list보다 관리 용이
@@ -50,4 +54,14 @@ public class PostEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customerId")
     private CustomerEntity customer;
+    public Set<CommentRes> getCommentEntitiesResponses() {
+        return this.commentEntities.stream()
+                .map(commentEntity -> new CommentRes(
+                        this.getPostId(), // 포스트 ID
+                        commentEntity.getContents(), // 댓글 내용
+                        commentEntity.getCustomer().getCustomerName(), // 작성자 이름
+                        commentEntity.getTime()
+                ))
+                .collect(Collectors.toSet());
+    }
 }

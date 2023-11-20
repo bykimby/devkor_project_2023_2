@@ -3,13 +3,14 @@ package com.example.devkorproject.post.service;
 import com.example.devkorproject.common.constants.ErrorCode;
 import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.entity.CustomerEntity;
-import com.example.devkorproject.customer.exception.CustomerDoesNotExistException;
 import com.example.devkorproject.customer.repository.CustomerRepository;
 import com.example.devkorproject.post.dto.*;
+import com.example.devkorproject.post.entity.CommentEntity;
 import com.example.devkorproject.post.entity.PhotoEntity;
 import com.example.devkorproject.post.entity.PostEntity;
 import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import com.example.devkorproject.post.exception.PostDoesNotExistException;
+import com.example.devkorproject.post.repository.CommentRepository;
 import com.example.devkorproject.post.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -23,10 +24,12 @@ import java.util.stream.Collectors;
 public class PostService {
     private final CustomerRepository customerRepository;
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository) {
+    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
     }
 
     public PostRes createPost(PostReq postReq){//photo는 따로 요청
@@ -285,5 +288,34 @@ public class PostService {
         if(deletePost.getCustomer().getCustomerId()!= postDeleteReq.getCustomerId())
             throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         postRepository.delete(deletePost);
+    }
+    public CommentRes giveComment(CommentReq commentReq){
+        Optional<PostEntity> opPost=postRepository.findById(commentReq.getPostId());
+        if(opPost.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        PostEntity post=opPost.get();
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(commentReq.getCustomerId());
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
+        CustomerEntity customer=opCustomer.get();
+        CommentEntity comment=CommentEntity.builder()
+                .post(post)
+                .customer(customer)
+                .contents(commentReq.getContents())
+                .time(LocalDateTime.now())
+                .build();
+        commentRepository.save(comment);
+        customer.setMyComments(customer.getMyComments()+1);
+        post.setComments(post.getComments()+1);
+        post.getCommentEntities().add(comment);
+        postRepository.save(post);
+        return new CommentRes(comment.getPost().getPostId(),comment.getContents(),comment.getCustomer().getCustomerName(),comment.getTime());
+    }
+    public List<CommentRes> getComments(Long postId){
+        Optional<PostEntity> opPost=postRepository.findById(postId);
+        if(opPost.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        PostEntity postEntity=opPost.get();
+        return postEntity.getCommentEntitiesResponses().stream().toList();
     }
 }

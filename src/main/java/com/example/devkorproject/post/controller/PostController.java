@@ -19,6 +19,10 @@ public class PostController {
     public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
         return HttpDataResponse.of(postService.createPost(postReq));
     }
+    @PostMapping("/comment")
+    public HttpDataResponse<CommentRes> giveComment(@RequestBody CommentReq commentReq){
+        return HttpDataResponse.of(postService.giveComment(commentReq));
+    }
     @GetMapping("/unique")
     public HttpDataResponse<PostRes> getUniquePost(@RequestParam Long postId){
         return HttpDataResponse.of(postService.getUniquePost(postId));
@@ -41,6 +45,10 @@ public class PostController {
     @GetMapping("/type")
     public HttpDataResponse<List<GetPostRes>> typeSearchPost(@RequestParam String type,Long startPostId) {
         return HttpDataResponse.of(postService.typeSearchPost(type,startPostId));
+    }
+    @GetMapping("/comment")
+    public HttpDataResponse<List<CommentRes>> getComments(@RequestParam Long postId){
+        return HttpDataResponse.of(postService.getComments(postId));
     }
 
     @PutMapping("")
