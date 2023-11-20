@@ -19,6 +19,8 @@ public class FridgeEntity {
     private Long frigeId;
     private String ingredients;
     private LocalDateTime date;
+    private boolean active;
+    private String emoticon;
     @ManyToOne
     @JoinColumn(name="customerId")
     private CustomerEntity customer;

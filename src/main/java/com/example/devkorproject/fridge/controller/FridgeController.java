@@ -14,7 +14,7 @@ import java.util.List;
 public class FridgeController {
     private final FridgeService fridgeService;
     @PostMapping()
-    public HttpDataResponse<FridgeResDto> createFridge(@RequestBody FridgeDto fridgeDto){
+    public HttpDataResponse<FridgeResFull> createFridge(@RequestBody FridgeDto fridgeDto){
         return HttpDataResponse.of(fridgeService.createFridge(fridgeDto));
     }
     @GetMapping("/customer")
@@ -29,8 +29,12 @@ public class FridgeController {
     public HttpDataResponse<List<FridgeResDto>> getCustomerFridgeOld(@RequestHeader("customerId") Long customerId){
         return HttpDataResponse.of(fridgeService.getCustomerFridgeOld(customerId));
     }
+    @GetMapping("/customer/unique")
+    public HttpDataResponse<FridgeResFull> getCustomerFridgeUnique(@RequestHeader("customerId") Long customerId,@RequestParam Long fridgeId){
+        return HttpDataResponse.of(fridgeService.getCustomerFridgeUnique(customerId,fridgeId));
+    }
     @PutMapping()
-    public HttpDataResponse<FridgeResDto> updateFridge(@RequestBody FridgeUpReq fridgeUpReq){
+    public HttpDataResponse<FridgeResFull> updateFridge(@RequestBody FridgeUpReq fridgeUpReq){
         return HttpDataResponse.of(fridgeService.updateFridge(fridgeUpReq));
     }
     @DeleteMapping()
