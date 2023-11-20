@@ -20,5 +20,7 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     List<PostEntity> findTop20ByUpdateDateBeforeOrderByUpdateDateDesc(LocalDateTime updateDate);
     List<PostEntity> findTop20ByTypeAndUpdateDateBeforeOrderByUpdateDateDesc(String type, LocalDateTime updateDate);
 
+
     Page<PostEntity> findAll(Pageable pageable);
+
 }

@@ -2,7 +2,9 @@ package com.example.devkorproject.post.entity;
 
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.post.dto.CommentRes;
+
 import com.example.devkorproject.post.dto.PostOrderRes;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -66,6 +68,7 @@ public class PostEntity {
                 .collect(Collectors.toSet());
     }
 
+
     public PostOrderRes toPostOrderRes() {
         return new PostOrderRes(
                 this.customer.getCustomerName(),
@@ -76,4 +79,5 @@ public class PostEntity {
         );
 
     }
+
 }
