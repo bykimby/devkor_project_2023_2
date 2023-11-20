@@ -16,7 +16,6 @@ public class PostUpdateReq {
     private Long likes;
     private String title;
     private String body;
-    private String category;
     private List<byte[]> photos;//TODO Photo를 list로 짜야 함
     private Long scrap;
     private String type;

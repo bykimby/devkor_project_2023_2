@@ -8,4 +8,6 @@ import lombok.Data;
 public class FridgeDto {
     private Long customerId;
     private String ingredients;
+    private boolean active;
+    private String emoticon;
 }

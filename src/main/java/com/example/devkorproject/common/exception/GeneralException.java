@@ -2,6 +2,8 @@ package com.example.devkorproject.common.exception;
 
 import com.example.devkorproject.common.constants.ErrorCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 
 @Getter
 public class GeneralException extends RuntimeException{

@@ -5,9 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class FridgeResDto {
+public class DeleteFridgeReq {
     private Long fridgeId;
-    private String ingredients;
-//    private boolean active;
-//    private String emoticon;
+    private Long customerId;
 }

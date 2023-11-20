@@ -4,6 +4,9 @@ import com.example.devkorproject.customer.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -15,6 +18,9 @@ public class FridgeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long frigeId;
     private String ingredients;
+    private LocalDateTime date;
+    private boolean active;
+    private String emoticon;
     @ManyToOne
     @JoinColumn(name="customerId")
     private CustomerEntity customer;

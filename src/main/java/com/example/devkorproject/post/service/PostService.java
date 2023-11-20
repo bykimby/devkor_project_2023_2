@@ -1,23 +1,25 @@
 package com.example.devkorproject.post.service;
 
+import com.example.devkorproject.common.constants.ErrorCode;
+import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.entity.CustomerEntity;
-import com.example.devkorproject.customer.exception.CustomerDoesNotExistException;
 import com.example.devkorproject.customer.repository.CustomerRepository;
 import com.example.devkorproject.post.dto.*;
+import com.example.devkorproject.post.entity.CommentEntity;
 import com.example.devkorproject.post.entity.PhotoEntity;
 import com.example.devkorproject.post.entity.PostEntity;
 import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import com.example.devkorproject.post.exception.PostDoesNotExistException;
+import com.example.devkorproject.post.repository.CommentRepository;
 import com.example.devkorproject.post.repository.PostRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,10 +27,12 @@ import java.util.stream.Collectors;
 public class PostService {
     private final CustomerRepository customerRepository;
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository) {
+    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
     }
 
     public PostRes createPost(PostReq postReq){//photo는 따로 요청
@@ -40,15 +44,14 @@ public class PostService {
         }
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByCustomerId(postReq.getCustomerId());
         if(opCustomer.isEmpty())
-            throw new CustomerDoesNotExistException();
+            throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
         CustomerEntity customer=opCustomer.get();
         PostEntity postEntity=PostEntity.builder()
-                .updateDate(LocalDate.now())
+                .updateDate(LocalDateTime.now())
                 .comments(postReq.getComments())
                 .likes(postReq.getLikes())
                 .title(postReq.getTitle())
                 .body(postReq.getBody())
-                .category(postReq.getCategory())
                 .photos(photos)
                 .scrap(postReq.getScrap())
                 .type(postReq.getType())
@@ -69,101 +72,184 @@ public class PostService {
                 postEntity.getTitle(),
                 postEntity.getBody(),
                 photosByte,
-                postEntity.getCategory(),
                 postEntity.getScrap(),
                 postEntity.getType()
         );
     }
-    public List<PostRes> keywordSearchPost(String keyword){
-        List<PostEntity> foundPosts=postRepository.findByTitleContainingOrBodyContaining(keyword,keyword);
-        if(foundPosts.isEmpty())
-            throw new PostDoesNotExistException();
+    public List<GetPostRes> keywordSearchPost(String keyword,Long startPostId){
+        List<PostEntity> foundPosts;
+        if(startPostId==0){
+            foundPosts=postRepository.findTop20ByTitleContainingOrBodyContainingOrderByUpdateDateDesc(keyword,keyword);
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        }
+        else{
+            Optional<PostEntity> startPost = postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+            foundPosts = postRepository.findNext20ByTitleContainingOrBodyContainingAndUpdateDateBeforeOrderByUpdateDateDesc(
+                        keyword, keyword, startPost.get().getUpdateDate());
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        }
         return foundPosts.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
+            return new GetPostRes(
                 post.getPostId(),
-                post.getUpdateDate(),
+                post.getUpdateDate().toString(),
                 post.getComments(),
                 post.getLikes(),
                 post.getTitle(),
-                post.getBody(),
-                photos,
-                post.getCategory(),
-                post.getScrap(),
-                post.getType()
+                photo,
+                post.getType(),
+                post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
-    public List<PostRes> typeSearchPost(String type){
-        List<PostEntity> foundPosts=postRepository.findByCategory(type);
-        if(foundPosts.isEmpty())
-            throw new PostDoesNotExistException();
+    public List<GetPostRes> typeSearchPost(String type,Long startPostId){
+        List<PostEntity> foundPosts;
+        if(startPostId==0){
+            foundPosts = postRepository.findTop20ByTypeOrderByUpdateDateDesc(type);
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        }else{
+            Optional<PostEntity> startPost=postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+            foundPosts=postRepository.findTop20ByTypeAndUpdateDateBeforeOrderByUpdateDateDesc(type, startPost.get().getUpdateDate());
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        }
         return foundPosts.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
+            return new GetPostRes(
                     post.getPostId(),
-                    post.getUpdateDate(),
+                    post.getUpdateDate().toString(),
                     post.getComments(),
                     post.getLikes(),
                     post.getTitle(),
-                    post.getBody(),
-                    photos,
-                    post.getCategory(),
-                    post.getScrap(),
-                    post.getType()
+                    photo,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
-    public List<PostRes> getAllPosts(){
-        List<PostEntity> postEntities=postRepository.findAll();
+    public List<GetPostRes> getAllPosts(Long startPostId){
+        List<PostEntity> postEntities;
+        if (startPostId == 0) {
+            postEntities = postRepository.findTop20ByOrderByUpdateDateDesc();
+            if(postEntities.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        } else {
+            Optional<PostEntity> startPost = postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+            postEntities = postRepository.findTop20ByUpdateDateBeforeOrderByUpdateDateDesc(startPost.get().getUpdateDate());
+            if(postEntities.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        }
         return postEntities.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
+            if(post.getCustomer().getCustomerName().isEmpty())
+                throw new GeneralException(ErrorCode.CUSTOMER_NAME_DOES_NOT_EXIST);
+            return new GetPostRes(
                     post.getPostId(),
-                    post.getUpdateDate(),
+                    post.getUpdateDate().toString(),
                     post.getComments(),
                     post.getLikes(),
                     post.getTitle(),
-                    post.getBody(),
-                    photos,
-                    post.getCategory(),
-                    post.getScrap(),
-                    post.getType()
+                    photo,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
     }
-    public List<PostRes> getCustomerPosts(Long customerId) {
-        List<PostEntity> postEntities = postRepository.findByCustomer_CustomerId(customerId);
-        if(postEntities.isEmpty())
-            throw new PostDoesNotExistException();
+    public List<GetPostRes> getCustomerPosts(Long customerId,Long startPostId) {
+        List<PostEntity> postEntities;
+        if(startPostId==0){
+            postEntities = postRepository.findTop20ByCustomer_CustomerIdOrderByUpdateDateDesc(customerId);
+            if(postEntities.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        } else{
+            Optional<PostEntity> startPost = postRepository.findById(startPostId);
+            if(startPost.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+            postEntities = postRepository.findNext20ByCustomer_CustomerIdAndUpdateDateBeforeOrderByUpdateDateDesc(
+                        customerId, startPost.get().getUpdateDate());
+            if(postEntities.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+        }
         return postEntities.stream().map(post -> {
-            List<byte[]> photos=post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhotos().stream()
                     .map(PhotoEntity::getData)
-                    .collect(Collectors.toList());
-            return new PostRes(
+                    .findFirst()
+                    .orElse(null);
+
+            List<byte[]> photos = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photos.add(firstPhotoData);
+            }
+            return new GetPostRes(
                     post.getPostId(),
-                    post.getUpdateDate(),
+                    post.getUpdateDate().toString(),
                     post.getComments(),
                     post.getLikes(),
                     post.getTitle(),
-                    post.getBody(),
                     photos,
-                    post.getCategory(),
-                    post.getScrap(),
-                    post.getType()
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
             );
         }).collect(Collectors.toList());
+    }
+    public PostRes getUniquePost(Long postId) {
+        try {
+            PostEntity foundPost = postRepository.findById(postId).orElseThrow(PostDoesNotExistException::new);
+            List<byte[]> photosByte = foundPost.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .collect(Collectors.toList());
+            return new PostRes(
+                    foundPost.getPostId(),
+                    foundPost.getUpdateDate(),
+                    foundPost.getComments(),
+                    foundPost.getLikes(),
+                    foundPost.getTitle(),
+                    foundPost.getBody(),
+                    photosByte,
+                    foundPost.getScrap(),
+                    foundPost.getType()
+            );
+        } catch (PostDoesNotExistException ex) {
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST, "Requested post does not exist", ex);
+        }
     }
     public PostRes updatePost(PostUpdateReq postUpdateReq){
         Optional<PostEntity> postEntity=postRepository.findById(postUpdateReq.getPostId());
         if(postEntity.isEmpty())
-            throw new PostDoesNotExistException();
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         if(postEntity.get().getCustomer().getCustomerId()!= postUpdateReq.getCustomerId())
             throw new CustomerDoesNotMatchException();
         Set<PhotoEntity> photos = new HashSet<>();
@@ -173,12 +259,12 @@ public class PostService {
             photos.add(photo);
         }
         PostEntity foundPost=postEntity.get();
-        foundPost.setUpdateDate(LocalDate.now());
+        foundPost.setCustomer(postEntity.get().getCustomer());
+        foundPost.setUpdateDate(LocalDateTime.now());
         foundPost.setComments(postUpdateReq.getComments());
         foundPost.setLikes(postUpdateReq.getLikes());
         foundPost.setTitle(postUpdateReq.getTitle());
         foundPost.setBody(postUpdateReq.getBody());
-        foundPost.setCategory(postUpdateReq.getCategory());
         foundPost.setPhotos(photos);
         foundPost.setType(postUpdateReq.getType());
         foundPost.setScrap(postUpdateReq.getScrap());
@@ -193,7 +279,6 @@ public class PostService {
                 foundPost.getTitle(),
                 foundPost.getBody(),
                 photosByte,
-                foundPost.getCategory(),
                 foundPost.getScrap(),
                 foundPost.getType()
         );
@@ -201,12 +286,51 @@ public class PostService {
     public void deletePost(PostDeleteReq postDeleteReq){
         Optional<PostEntity> toDeletePost=postRepository.findById(postDeleteReq.getPostId());
         if(toDeletePost.isEmpty())
-            throw new PostDoesNotExistException();
+            throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         PostEntity deletePost=toDeletePost.get();
         if(deletePost.getCustomer().getCustomerId()!= postDeleteReq.getCustomerId())
-            throw new CustomerDoesNotMatchException();
-        if(deletePost.getCustomer().getCustomerId()!= postDeleteReq.getCustomerId())
-            throw new CustomerDoesNotMatchException();
+            throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         postRepository.delete(deletePost);
+    }
+    public CommentRes giveComment(CommentReq commentReq){
+        Optional<PostEntity> opPost=postRepository.findById(commentReq.getPostId());
+        if(opPost.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        PostEntity post=opPost.get();
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(commentReq.getCustomerId());
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
+        CustomerEntity customer=opCustomer.get();
+        CommentEntity comment=CommentEntity.builder()
+                .post(post)
+                .customer(customer)
+                .contents(commentReq.getContents())
+                .time(LocalDateTime.now())
+                .build();
+        commentRepository.save(comment);
+        customer.setMyComments(customer.getMyComments()+1);
+        post.setComments(post.getComments()+1);
+        post.getCommentEntities().add(comment);
+        postRepository.save(post);
+        return new CommentRes(comment.getPost().getPostId(),comment.getContents(),comment.getCustomer().getCustomerName(),comment.getTime());
+    }
+    public List<CommentRes> getComments(Long postId){
+        Optional<PostEntity> opPost=postRepository.findById(postId);
+        if(opPost.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        PostEntity postEntity=opPost.get();
+        return postEntity.getCommentEntitiesResponses().stream().toList();
+    }
+
+    public List<PostOrderRes> orderPost(PostOrderReq postOrderReq) {
+        int pageNo = postOrderReq.getPageNo();
+        String criteria = postOrderReq.getCriteria();
+        String sort = postOrderReq.getSort();
+
+        Pageable pageable = (sort.equals("ASC")) ?
+                PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.ASC, criteria))
+                : PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.DESC, criteria));
+
+        return postRepository.findAll(pageable).map(PostEntity::toPostOrderRes).getContent();
     }
 }
