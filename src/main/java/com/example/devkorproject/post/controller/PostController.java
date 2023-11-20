@@ -59,4 +59,15 @@ public class PostController {
     public void deletePost(@RequestBody PostDeleteReq postDeleteReq){
         postService.deletePost(postDeleteReq);
     }
+
+    @GetMapping("/sort")
+    public HttpDataResponse<List<PostOrderRes>> orderPost(@RequestBody PostOrderReq postOrderReq) {
+        return HttpDataResponse.of(postService.orderPost(postOrderReq));
+    }
+//    public HttpDataResponse<Page<PostOrderRes>> orderPost(
+//            @RequestParam(required = false, defaultValue = "0", value = "page") int pageNo,
+//            @RequestParam(required = false, defaultValue = "updateDate", value = "orderby") String criteria,
+//            @RequestParam(required = false, defaultValue = "DESC", value = "sort") String sort) {
+//        return HttpDataResponse.of(postService.orderPost(pageNo, criteria, sort));
+//    }
 }

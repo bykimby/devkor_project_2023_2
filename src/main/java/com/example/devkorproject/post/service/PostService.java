@@ -13,6 +13,9 @@ import com.example.devkorproject.post.exception.PostDoesNotExistException;
 import com.example.devkorproject.post.repository.CommentRepository;
 import com.example.devkorproject.post.repository.PostRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -318,4 +321,17 @@ public class PostService {
         PostEntity postEntity=opPost.get();
         return postEntity.getCommentEntitiesResponses().stream().toList();
     }
+
+    public List<PostOrderRes> orderPost(PostOrderReq postOrderReq) {
+        int pageNo = postOrderReq.getPageNo();
+        String criteria = postOrderReq.getCriteria();
+        String sort = postOrderReq.getSort();
+
+        Pageable pageable = (sort.equals("ASC")) ?
+                PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.ASC, criteria))
+                : PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.DESC, criteria));
+
+        return postRepository.findAll(pageable).map(PostEntity::toPostOrderRes).getContent();
+    }
+
 }

@@ -1,6 +1,8 @@
 package com.example.devkorproject.post.repository;
 
 import com.example.devkorproject.post.entity.PostEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
@@ -17,4 +19,8 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     List<PostEntity> findTop20ByOrderByUpdateDateDesc();
     List<PostEntity> findTop20ByUpdateDateBeforeOrderByUpdateDateDesc(LocalDateTime updateDate);
     List<PostEntity> findTop20ByTypeAndUpdateDateBeforeOrderByUpdateDateDesc(String type, LocalDateTime updateDate);
+
+
+    Page<PostEntity> findAll(Pageable pageable);
+
 }
