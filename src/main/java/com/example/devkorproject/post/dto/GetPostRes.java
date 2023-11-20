@@ -15,7 +15,6 @@ public class GetPostRes {
     private Long likes;
     private String title;
     private List<byte[]> photo;
-    //TODO : photo 관련 설정
     private String type;
     private String customerName;
 

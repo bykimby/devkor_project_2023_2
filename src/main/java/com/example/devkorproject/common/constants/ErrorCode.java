@@ -1,6 +1,7 @@
 package com.example.devkorproject.common.constants;
 
 import com.example.devkorproject.common.exception.GeneralException;
+import com.example.devkorproject.customer.exception.CustomerNameDoesNotExist;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,8 @@ public enum ErrorCode {
     CUSTOMER_DOES_NOT_EXIST(10001, HttpStatus.BAD_REQUEST, "Requested customer is not found"),
     POST_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested post is not found"),
     CUSTOMER_DOES_NOT_MATCH(10001,HttpStatus.BAD_REQUEST,"Requested customer does not match"),
-    FRIDGE_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested fridge does not found")
+    FRIDGE_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested fridge does not found"),
+    CUSTOMER_NAME_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested customer name does not found")
     ;
     private final Integer code;
     private final HttpStatus httpStatus;

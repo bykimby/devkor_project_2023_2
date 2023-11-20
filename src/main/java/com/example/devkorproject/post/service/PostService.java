@@ -1,5 +1,7 @@
 package com.example.devkorproject.post.service;
 
+import com.example.devkorproject.common.constants.ErrorCode;
+import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.exception.CustomerDoesNotExistException;
 import com.example.devkorproject.customer.repository.CustomerRepository;
@@ -36,7 +38,7 @@ public class PostService {
         }
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByCustomerId(postReq.getCustomerId());
         if(opCustomer.isEmpty())
-            throw new CustomerDoesNotExistException();
+            throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
         CustomerEntity customer=opCustomer.get();
         PostEntity postEntity=PostEntity.builder()
                 .updateDate(LocalDateTime.now())
@@ -72,13 +74,17 @@ public class PostService {
         List<PostEntity> foundPosts;
         if(startPostId==0){
             foundPosts=postRepository.findTop20ByTitleContainingOrBodyContainingOrderByUpdateDateDesc(keyword,keyword);
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         else{
             Optional<PostEntity> startPost = postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new PostDoesNotExistException();
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
             foundPosts = postRepository.findNext20ByTitleContainingOrBodyContainingAndUpdateDateBeforeOrderByUpdateDateDesc(
                         keyword, keyword, startPost.get().getUpdateDate());
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return foundPosts.stream().map(post -> {
             byte[] firstPhotoData = post.getPhotos().stream()
@@ -106,11 +112,15 @@ public class PostService {
         List<PostEntity> foundPosts;
         if(startPostId==0){
             foundPosts = postRepository.findTop20ByTypeOrderByUpdateDateDesc(type);
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }else{
             Optional<PostEntity> startPost=postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new PostDoesNotExistException();
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
             foundPosts=postRepository.findTop20ByTypeAndUpdateDateBeforeOrderByUpdateDateDesc(type, startPost.get().getUpdateDate());
+            if(foundPosts.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return foundPosts.stream().map(post -> {
             byte[] firstPhotoData = post.getPhotos().stream()
@@ -138,11 +148,15 @@ public class PostService {
         List<PostEntity> postEntities;
         if (startPostId == 0) {
             postEntities = postRepository.findTop20ByOrderByUpdateDateDesc();
+            if(postEntities.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         } else {
             Optional<PostEntity> startPost = postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new PostDoesNotExistException();
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
             postEntities = postRepository.findTop20ByUpdateDateBeforeOrderByUpdateDateDesc(startPost.get().getUpdateDate());
+            if(postEntities.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return postEntities.stream().map(post -> {
             byte[] firstPhotoData = post.getPhotos().stream()
@@ -154,6 +168,8 @@ public class PostService {
             if (firstPhotoData != null) {
                 photo.add(firstPhotoData);
             }
+            if(post.getCustomer().getCustomerName().isEmpty())
+                throw new GeneralException(ErrorCode.CUSTOMER_NAME_DOES_NOT_EXIST);
             return new GetPostRes(
                     post.getPostId(),
                     post.getUpdateDate().toString(),
@@ -170,12 +186,16 @@ public class PostService {
         List<PostEntity> postEntities;
         if(startPostId==0){
             postEntities = postRepository.findTop20ByCustomer_CustomerIdOrderByUpdateDateDesc(customerId);
+            if(postEntities.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         } else{
             Optional<PostEntity> startPost = postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new PostDoesNotExistException();
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
             postEntities = postRepository.findNext20ByCustomer_CustomerIdAndUpdateDateBeforeOrderByUpdateDateDesc(
                         customerId, startPost.get().getUpdateDate());
+            if(postEntities.isEmpty())
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return postEntities.stream().map(post -> {
             byte[] firstPhotoData = post.getPhotos().stream()
@@ -199,30 +219,31 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-    public PostRes getUniquePost(Long postId){
-        Optional<PostEntity> opfoundPost=postRepository.findById(postId);
-        if(opfoundPost.isEmpty())
-            throw new PostDoesNotExistException();
-        PostEntity foundPost=opfoundPost.get();
-        List<byte[]> photosByte = foundPost.getPhotos().stream()
-                .map(PhotoEntity::getData)
-                .collect(Collectors.toList());
-        return new PostRes(
-                foundPost.getPostId(),
-                foundPost.getUpdateDate(),
-                foundPost.getComments(),
-                foundPost.getLikes(),
-                foundPost.getTitle(),
-                foundPost.getBody(),
-                photosByte,
-                foundPost.getScrap(),
-                foundPost.getType()
-        );
+    public PostRes getUniquePost(Long postId) {
+        try {
+            PostEntity foundPost = postRepository.findById(postId).orElseThrow(PostDoesNotExistException::new);
+            List<byte[]> photosByte = foundPost.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .collect(Collectors.toList());
+            return new PostRes(
+                    foundPost.getPostId(),
+                    foundPost.getUpdateDate(),
+                    foundPost.getComments(),
+                    foundPost.getLikes(),
+                    foundPost.getTitle(),
+                    foundPost.getBody(),
+                    photosByte,
+                    foundPost.getScrap(),
+                    foundPost.getType()
+            );
+        } catch (PostDoesNotExistException ex) {
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST, "Requested post does not exist", ex);
+        }
     }
     public PostRes updatePost(PostUpdateReq postUpdateReq){
         Optional<PostEntity> postEntity=postRepository.findById(postUpdateReq.getPostId());
         if(postEntity.isEmpty())
-            throw new PostDoesNotExistException();
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         if(postEntity.get().getCustomer().getCustomerId()!= postUpdateReq.getCustomerId())
             throw new CustomerDoesNotMatchException();
         Set<PhotoEntity> photos = new HashSet<>();
@@ -232,12 +253,12 @@ public class PostService {
             photos.add(photo);
         }
         PostEntity foundPost=postEntity.get();
-        //foundPost.setUpdateDate(LocalDateTime.now());
+        foundPost.setCustomer(postEntity.get().getCustomer());
+        foundPost.setUpdateDate(LocalDateTime.now());
         foundPost.setComments(postUpdateReq.getComments());
         foundPost.setLikes(postUpdateReq.getLikes());
         foundPost.setTitle(postUpdateReq.getTitle());
         foundPost.setBody(postUpdateReq.getBody());
-        //foundPost.setCategory(postUpdateReq.getCategory());
         foundPost.setPhotos(photos);
         foundPost.setType(postUpdateReq.getType());
         foundPost.setScrap(postUpdateReq.getScrap());
@@ -259,12 +280,10 @@ public class PostService {
     public void deletePost(PostDeleteReq postDeleteReq){
         Optional<PostEntity> toDeletePost=postRepository.findById(postDeleteReq.getPostId());
         if(toDeletePost.isEmpty())
-            throw new PostDoesNotExistException();
+            throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         PostEntity deletePost=toDeletePost.get();
         if(deletePost.getCustomer().getCustomerId()!= postDeleteReq.getCustomerId())
-            throw new CustomerDoesNotMatchException();
-        if(deletePost.getCustomer().getCustomerId()!= postDeleteReq.getCustomerId())
-            throw new CustomerDoesNotMatchException();
+            throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         postRepository.delete(deletePost);
     }
 }

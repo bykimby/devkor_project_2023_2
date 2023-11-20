@@ -43,7 +43,7 @@ public class PostEntity {
     @Column(name = "type", nullable = false)
     private String type;
 
-    @OneToMany(mappedBy="post",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
     private Set<PhotoEntity> photos;
     //중복 x 허용하는 것으로 list보다 관리 용이
     //orphan removal은 부모 엔티티 삭제되면 자식 entity들도 삭제되도록 함
