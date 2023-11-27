@@ -10,4 +10,5 @@ import java.util.Optional;
 @Component
 public interface FridgeRepository extends JpaRepository<FridgeEntity,Long> {
     List<FridgeEntity> findByCustomerCustomerId(Long customerId);
+    List<FridgeEntity> findByCustomerCustomerIdOrderByCustomerOrderAsc(Long customerId);
 }

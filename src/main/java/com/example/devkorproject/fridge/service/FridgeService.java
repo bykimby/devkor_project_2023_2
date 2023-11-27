@@ -8,7 +8,6 @@ import com.example.devkorproject.customer.repository.CustomerRepository;
 import com.example.devkorproject.fridge.dto.*;
 import com.example.devkorproject.fridge.entity.FridgeEntity;
 import com.example.devkorproject.fridge.exception.FridgeDoesNotExistException;
-import com.example.devkorproject.fridge.manager.SessionManager;
 import com.example.devkorproject.fridge.repository.FridgeRepository;
 import com.example.devkorproject.post.dto.PostRes;
 import com.example.devkorproject.post.entity.PhotoEntity;
@@ -18,9 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,16 +45,37 @@ public class FridgeService {
         return new FridgeResFull(fridgeEntity.getFrigeId(),fridgeEntity.getIngredients(), fridgeEntity.isActive(), fridgeEntity.getEmoticon());
     }
     public List<FridgeResDto> getCustomerFridge(Long customerId){
-        List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerId);
+        List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerIdOrderByCustomerOrderAsc(customerId);
         if(fridgeEntities.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
-        Comparator<FridgeEntity> sortOrder= SessionManager.getUserSortOrder(customerId);
-        return fridgeEntities.stream().sorted(sortOrder).map(fridgeEntity -> new FridgeResDto(
-                fridgeEntity.getFrigeId(),fridgeEntity.getIngredients()
-            )).collect(Collectors.toList());
+        return fridgeEntities.stream().map(fridge -> new FridgeResDto(
+                fridge.getFrigeId(),
+                fridge.getIngredients()
+        )).collect(Collectors.toList());
     }
-    public void saveUserSortOrder(Long userId, Comparator<FridgeEntity> comparator) {
-        SessionManager.setUserSortOrder(userId, comparator);
+    public List<FridgeResDto> saveCustomerOrder(CustomerSortReq customerSortReq){
+        List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerSortReq.getCustomerId());
+        if(fridgeEntities.isEmpty())
+            throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST);
+        List<Long> fridgeIdOrder = customerSortReq.getFridgeIdOrder();
+
+        Map<Long, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < fridgeIdOrder.size(); i++) {
+            orderMap.put(fridgeIdOrder.get(i), i + 1); // +1을 해주어 1부터 시작하도록 함
+        }
+        List<FridgeResDto> fridgeResDtoList = new ArrayList<>();
+        for (Long fridgeId : fridgeIdOrder) {
+            for (FridgeEntity fridge : fridgeEntities) {
+                if (fridge.getFrigeId().equals(fridgeId) && orderMap.containsKey(fridgeId)) {
+                    Integer order = orderMap.get(fridgeId);
+                    fridge.setCustomerOrder(order.longValue());
+                    fridgeRepository.save(fridge);
+                    fridgeResDtoList.add(new FridgeResDto(fridgeId, fridge.getIngredients()));
+                    break;
+                }
+            }
+        }
+        return fridgeResDtoList;
     }
     public List<FridgeResDto> getCustomerFridgeNew(Long customerId){
         List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerId);
