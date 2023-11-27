@@ -4,9 +4,12 @@ import com.example.devkorproject.baby.entity.BabyEntity;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,26 +22,11 @@ public class DietEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long dietId;
 
-    @Column(name = "dietName" ,nullable = false, length = 20)
-    private String dietName;
-
-    @Column(name = "description", nullable = false)
-    private String description;
-
     @Column(name = "ingredients", nullable = false)
     private String ingredients;
 
-    @Column(name = "recipe", nullable = false)
+    @Column(name = "recipe", nullable = false, length = 512)
     private String recipe;
-
-    @Column(name = "difficulty", nullable = false)
-    private String difficulty;
-
-    @Column(name = "time", nullable = false)
-    private Long time;
-
-    @Column(name = "info", nullable = false)
-    private String info;
 
     @Column(name = "available")
     private String available;
@@ -58,11 +46,7 @@ public class DietEntity {
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customerId")
-    private CustomerEntity customer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "babyId")
-    private BabyEntity baby;
+    @OneToMany(mappedBy = "diet", orphanRemoval = true)
+    @Builder.Default
+    private List<SimpleDietEntity> simplediets = new ArrayList<SimpleDietEntity>();
 }

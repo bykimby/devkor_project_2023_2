@@ -12,8 +12,10 @@ import java.io.Serializable;
 @Getter
 @Setter
 public class SimpleResDto implements Serializable {
+    private Long simpleDietId;
     private String dietName;
     private String description;
-    private String time;
+    private Long time;
     private String difficulty;
+    private boolean heart;
 }

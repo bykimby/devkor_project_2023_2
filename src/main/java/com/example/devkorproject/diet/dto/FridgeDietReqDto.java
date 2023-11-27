@@ -9,11 +9,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class DietResDto {
+public class FridgeDietReqDto {
     private String dietName;
-    private String description;
-    private String ingredients;
-    private String recipe;
-    private Long time;
+    private String time;
     private String difficulty;
+    private String type;
+    private String fridge;
+    private String keyword;
 }
