@@ -9,11 +9,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class DietResDto {
+public class HeartDietResDto {
+    private Long simpleDietId;
     private String dietName;
     private String description;
-    private String ingredients;
-    private String recipe;
     private Long time;
     private String difficulty;
 }

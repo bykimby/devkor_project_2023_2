@@ -2,6 +2,7 @@ package com.example.devkorproject.customer.entity;
 
 import com.example.devkorproject.baby.entity.BabyEntity;
 import com.example.devkorproject.diet.entity.DietEntity;
+import com.example.devkorproject.diet.entity.SimpleDietEntity;
 import com.example.devkorproject.post.entity.PostEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -56,5 +57,5 @@ public class CustomerEntity {
     
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
     @Builder.Default
-    private List<DietEntity> diets = new ArrayList<DietEntity>();
+    private List<SimpleDietEntity> simpleDiets = new ArrayList<SimpleDietEntity>();
 }
