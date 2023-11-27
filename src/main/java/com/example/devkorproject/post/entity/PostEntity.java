@@ -3,15 +3,10 @@ package com.example.devkorproject.post.entity;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.post.dto.CommentRes;
 
-import com.example.devkorproject.post.dto.PostOrderRes;
-
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.awt.*;
-import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -67,17 +62,4 @@ public class PostEntity {
                 ))
                 .collect(Collectors.toSet());
     }
-
-
-    public PostOrderRes toPostOrderRes() {
-        return new PostOrderRes(
-                this.customer.getCustomerName(),
-                this.updateDate,
-                this.comments,
-                this.likes,
-                this.title
-        );
-
-    }
-
 }

@@ -5,17 +5,15 @@ import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.repository.CustomerRepository;
 import com.example.devkorproject.post.dto.*;
-import com.example.devkorproject.post.entity.CommentEntity;
-import com.example.devkorproject.post.entity.PhotoEntity;
-import com.example.devkorproject.post.entity.PostEntity;
+import com.example.devkorproject.post.entity.*;
 import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import com.example.devkorproject.post.exception.PostDoesNotExistException;
 import com.example.devkorproject.post.repository.CommentRepository;
+import com.example.devkorproject.post.repository.LikeRepository;
 import com.example.devkorproject.post.repository.PostRepository;
+import com.example.devkorproject.post.repository.ScrapRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,11 +26,15 @@ public class PostService {
     private final CustomerRepository customerRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final ScrapRepository scrapRepository;
+    private final LikeRepository likeRepository;
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository) {
+    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
+        this.scrapRepository = scrapRepository;
+        this.likeRepository = likeRepository;
     }
 
     public PostRes createPost(PostReq postReq){//photo는 따로 요청
@@ -321,17 +323,174 @@ public class PostService {
         PostEntity postEntity=opPost.get();
         return postEntity.getCommentEntitiesResponses().stream().toList();
     }
+    public List<GetPostRes> weeklyLiked(){
+        List<PostEntity> postEntities=postRepository.findTop10ByLikesWithinLastWeek();
+        if(postEntities.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        return postEntities.stream().map(post -> {
+            byte[] firstPhotoData = post.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .findFirst()
+                    .orElse(null);
 
-    public List<PostOrderRes> orderPost(PostOrderReq postOrderReq) {
-        int pageNo = postOrderReq.getPageNo();
-        String criteria = postOrderReq.getCriteria();
-        String sort = postOrderReq.getSort();
+            List<byte[]> photos = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photos.add(firstPhotoData);
+            }
+            return new GetPostRes(
+                    post.getPostId(),
+                    post.getUpdateDate().toString(),
+                    post.getComments(),
+                    post.getLikes(),
+                    post.getTitle(),
+                    photos,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
+            );
+        }).collect(Collectors.toList());    }
+    public List<GetPostRes> getLikedPost(Long startPostId){
+        List<PostEntity> postEntities;
+        if(startPostId==0)
+        {
+            postEntities=postRepository.findTop20ByOrderByLikesDesc();
+            if(postEntities.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        }
+        else
+        {
+            int pageSize = 20;
+            Optional<PostEntity> opPost=postRepository.findById(startPostId);
+            if(opPost.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+            PostEntity realPost=opPost.get();
+            Long likes=realPost.getLikes();
+            postEntities = postRepository.findByLikesLessThanAndPostIdGreaterThanOrderByLikesDescPostIdAsc(
+                likes, startPostId, PageRequest.of(0, pageSize)
+        );}
+        return postEntities.stream().map(post -> {
+            byte[] firstPhotoData = post.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .findFirst()
+                    .orElse(null);
 
-        Pageable pageable = (sort.equals("ASC")) ?
-                PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.ASC, criteria))
-                : PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.DESC, criteria));
-
-        return postRepository.findAll(pageable).map(PostEntity::toPostOrderRes).getContent();
+            List<byte[]> photos = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photos.add(firstPhotoData);
+            }
+            return new GetPostRes(
+                    post.getPostId(),
+                    post.getUpdateDate().toString(),
+                    post.getComments(),
+                    post.getLikes(),
+                    post.getTitle(),
+                    photos,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
+            );
+        }).collect(Collectors.toList());
     }
+    public List<GetPostRes> getLikedPostByType(String type,Long startPostId){
+        List<PostEntity> postEntities;
+        if(startPostId==0)
+        {
+            postEntities=postRepository.findTop20ByTypeLikesOrderByLikesDesc(type);
+            if(postEntities.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        }
+        else{
+            int pageSize = 20;
+            Optional<PostEntity> opPost=postRepository.findById(startPostId);
+            if(opPost.isEmpty())
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+            PostEntity realPost=opPost.get();
+            Long likes=realPost.getLikes();
+            postEntities = postRepository.findByTypeAndLikesLessThanEqualAndPostIdLessThanOrderByLikesDescUpdateDateAsc(
+                    type,likes, startPostId, PageRequest.of(0, pageSize)
+            );
+        }
+        return postEntities.stream().map(post -> {
+            byte[] firstPhotoData = post.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .findFirst()
+                    .orElse(null);
 
+            List<byte[]> photos = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photos.add(firstPhotoData);
+            }
+            return new GetPostRes(
+                    post.getPostId(),
+                    post.getUpdateDate().toString(),
+                    post.getComments(),
+                    post.getLikes(),
+                    post.getTitle(),
+                    photos,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
+            );
+        }).collect(Collectors.toList());
+    }
+    public LikesRes giveLikes(LikesReq likesReq){
+        Optional<PostEntity> opPost=postRepository.findById(likesReq.getPostId());
+        if(opPost.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        PostEntity post=opPost.get();
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(likesReq.getCustomerId());
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
+        CustomerEntity customer=opCustomer.get();
+        LikeEntity like=LikeEntity.builder()
+                .post(post)
+                .customer(customer)
+                .build();
+        likeRepository.save(like);
+        post.setLikes(post.getLikes()+1);
+        customer.setMyLikes(customer.getMyLikes()+1);
+        return new LikesRes(post.getPostId(), post.getLikes());
+    }
+    public ScrapRes giveScrap(ScrapReq scrapReq){
+        Optional<PostEntity> opPost=postRepository.findById(scrapReq.getPostId());
+        if(opPost.isEmpty())
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
+        PostEntity post=opPost.get();
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(scrapReq.getCustomerId());
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
+        CustomerEntity customer=opCustomer.get();
+        ScrapEntity scrap=ScrapEntity.builder()
+                .post(post)
+                .customer(customer)
+                .build();
+        scrapRepository.save(scrap);
+        post.setScrap(post.getScrap()+1);
+        return new ScrapRes(post.getPostId(),post.getScrap());
+    }
+    public List<GetPostRes> getScrap(Long customerId, String type){
+        List<ScrapEntity> scrapEntities=scrapRepository.findByCustomer_CustomerId(customerId);
+        if(scrapEntities.isEmpty())
+            throw new GeneralException(ErrorCode.SCRAP_DOES_NOT_EXIST);
+        return scrapEntities.stream()
+                .filter(scrap -> scrap.getPost().getType().equals(type)).map(scrap -> {
+            PostEntity post=scrap.getPost();
+            byte[] firstPhotoData = post.getPhotos().stream()
+                    .map(PhotoEntity::getData)
+                    .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
+                    .orElse(null); // 사진이 없을 경우 null 반환
+
+            List<byte[]> photo = new ArrayList<>();
+            if (firstPhotoData != null) {
+                photo.add(firstPhotoData);
+            }
+            return new GetPostRes(
+                    post.getPostId(),
+                    post.getUpdateDate().toString(),
+                    post.getComments(),
+                    post.getLikes(),
+                    post.getTitle(),
+                    photo,
+                    post.getType(),
+                    post.getCustomer().getCustomerName()
+            );
+        }).collect(Collectors.toList());
+    }
 }

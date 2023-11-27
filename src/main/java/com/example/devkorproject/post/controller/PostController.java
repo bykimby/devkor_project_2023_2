@@ -23,6 +23,14 @@ public class PostController {
     public HttpDataResponse<CommentRes> giveComment(@RequestBody CommentReq commentReq){
         return HttpDataResponse.of(postService.giveComment(commentReq));
     }
+    @PostMapping("/likes")
+    public HttpDataResponse<LikesRes> giveLikes(@RequestBody LikesReq likesReq){
+        return HttpDataResponse.of(postService.giveLikes(likesReq));
+    }
+    @PostMapping("/scrap")
+    public HttpDataResponse<ScrapRes> giveScrap(@RequestBody ScrapReq scrapReq){
+        return HttpDataResponse.of(postService.giveScrap(scrapReq));
+    }
     @GetMapping("/unique")
     public HttpDataResponse<PostRes> getUniquePost(@RequestParam Long postId){
         return HttpDataResponse.of(postService.getUniquePost(postId));
@@ -50,6 +58,10 @@ public class PostController {
     public HttpDataResponse<List<CommentRes>> getComments(@RequestParam Long postId){
         return HttpDataResponse.of(postService.getComments(postId));
     }
+    @GetMapping("/scrap")
+    public HttpDataResponse<List<GetPostRes>> getScrap(@RequestParam Long customerId, String type){
+        return HttpDataResponse.of(postService.getScrap(customerId,type));
+    }
 
     @PutMapping("")
     public HttpDataResponse<PostRes> updatePost(@RequestBody PostUpdateReq postUpdateReq){
@@ -60,14 +72,17 @@ public class PostController {
         postService.deletePost(postDeleteReq);
     }
 
-    @GetMapping("/sort")
-    public HttpDataResponse<List<PostOrderRes>> orderPost(@RequestBody PostOrderReq postOrderReq) {
-        return HttpDataResponse.of(postService.orderPost(postOrderReq));
+    @GetMapping("/weekly")//주간 인기글
+    public HttpDataResponse<List<GetPostRes>> weeklyLiked(){
+        return HttpDataResponse.of(postService.weeklyLiked());
     }
-//    public HttpDataResponse<Page<PostOrderRes>> orderPost(
-//            @RequestParam(required = false, defaultValue = "0", value = "page") int pageNo,
-//            @RequestParam(required = false, defaultValue = "updateDate", value = "orderby") String criteria,
-//            @RequestParam(required = false, defaultValue = "DESC", value = "sort") String sort) {
-//        return HttpDataResponse.of(postService.orderPost(pageNo, criteria, sort));
-//    }
+
+    @GetMapping("/likes")//인기순 10개씩
+    public HttpDataResponse<List<GetPostRes>> getLikedPost(@RequestParam Long startPostId){
+        return HttpDataResponse.of(postService.getLikedPost(startPostId));
+    }
+    @GetMapping("/type/likes")//type별 인기순 10개씩
+    public HttpDataResponse<List<GetPostRes>> getLikedPostByType(@RequestParam String type,Long startPostId){
+        return HttpDataResponse.of(postService.getLikedPostByType(type,startPostId));
+    }
 }
