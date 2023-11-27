@@ -5,6 +5,7 @@ import com.example.devkorproject.post.dto.*;
 import com.example.devkorproject.post.service.PostService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -64,10 +65,4 @@ public class PostController {
     public HttpDataResponse<List<PostOrderRes>> orderPost(@RequestBody PostOrderReq postOrderReq) {
         return HttpDataResponse.of(postService.orderPost(postOrderReq));
     }
-//    public HttpDataResponse<Page<PostOrderRes>> orderPost(
-//            @RequestParam(required = false, defaultValue = "0", value = "page") int pageNo,
-//            @RequestParam(required = false, defaultValue = "updateDate", value = "orderby") String criteria,
-//            @RequestParam(required = false, defaultValue = "DESC", value = "sort") String sort) {
-//        return HttpDataResponse.of(postService.orderPost(pageNo, criteria, sort));
-//    }
 }
