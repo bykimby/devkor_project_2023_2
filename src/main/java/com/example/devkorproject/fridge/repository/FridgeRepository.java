@@ -12,6 +12,7 @@ import java.util.Optional;
 @Component
 public interface FridgeRepository extends JpaRepository<FridgeEntity,Long> {
     List<FridgeEntity> findByCustomerCustomerId(Long customerId);
+    List<FridgeEntity> findByCustomerCustomerIdOrderByCustomerOrderAsc(Long customerId);
     @Query("SELECT f.ingredients FROM FridgeEntity f WHERE f.customer.customerId = :customerId AND f.active = true")
     List<String> findActiveIngredientsByCustomerId(@Param("customerId") Long customerId);
 }
