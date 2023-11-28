@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class PostOrderReq {
-    private int pageNo;
-    private String criteria;
-    private String sort;
+public class ScrapRes {
+    private Long postId;
+    private Long scrap;
 }

@@ -17,6 +17,10 @@ public class FridgeController {
     public HttpDataResponse<FridgeResFull> createFridge(@RequestBody FridgeDto fridgeDto){
         return HttpDataResponse.of(fridgeService.createFridge(fridgeDto));
     }
+    @PostMapping("/customer/sort")
+    public HttpDataResponse<List<FridgeResDto>> saveCustomerOrder(@RequestBody CustomerSortReq customerSortReq){
+        return HttpDataResponse.of(fridgeService.saveCustomerOrder(customerSortReq));
+    }
     @GetMapping("/customer")
     public HttpDataResponse<List<FridgeResDto>> getCustomerFridge(@RequestHeader("customerId") Long customerId){
         return HttpDataResponse.of(fridgeService.getCustomerFridge(customerId));
