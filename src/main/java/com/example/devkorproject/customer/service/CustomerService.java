@@ -1,9 +1,13 @@
 package com.example.devkorproject.customer.service;
 
+import com.example.devkorproject.common.constants.ErrorCode;
+import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.dto.TempCustomer;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class CustomerService {
@@ -28,4 +32,11 @@ public class CustomerService {
         return tempCustomer;
     }
 
+    public CustomerEntity searchByMemberId(Long customerId) {
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+        CustomerEntity customer = opCustomer.get();
+        return customer;
+    }
 }

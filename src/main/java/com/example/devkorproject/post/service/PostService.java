@@ -11,32 +11,44 @@ import com.example.devkorproject.post.entity.PostEntity;
 import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import com.example.devkorproject.post.exception.PostDoesNotExistException;
 import com.example.devkorproject.post.repository.CommentRepository;
+import com.example.devkorproject.post.repository.PhotoRepository;
 import com.example.devkorproject.post.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
 @Transactional
+@Service
 public class PostService {
     private final CustomerRepository customerRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository) {
+    private final PhotoRepository photoRepository;
+
+    public PostService(CustomerRepository customerRepository,
+                       PostRepository postRepository,
+                       CommentRepository commentRepository,
+                       PhotoRepository photoRepository) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
+        this.photoRepository = photoRepository;
     }
 
     public PostRes createPost(PostReq postReq){//photo는 따로 요청
-        Set<PhotoEntity> photos = new HashSet<>();
+        List<PhotoEntity> photos = Collections.emptyList();
         for(byte[] photoData:postReq.getPhotos()){
             PhotoEntity photo=new PhotoEntity();
             photo.setData(photoData);
@@ -52,7 +64,7 @@ public class PostService {
                 .likes(postReq.getLikes())
                 .title(postReq.getTitle())
                 .body(postReq.getBody())
-                .photos(photos)
+                .photo(photos)
                 .scrap(postReq.getScrap())
                 .type(postReq.getType())
                 .customer(customer)
@@ -60,7 +72,7 @@ public class PostService {
         for(PhotoEntity photo:photos){
             photo.setPost(postEntity);
         }
-        List<byte[]> photosByte = postEntity.getPhotos().stream()
+        List<byte[]> photosByte = postEntity.getPhoto().stream()
                 .map(PhotoEntity::getData)
                 .collect(Collectors.toList());
         postRepository.save(postEntity);
@@ -93,7 +105,7 @@ public class PostService {
                 throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return foundPosts.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
                     .orElse(null); // 사진이 없을 경우 null 반환
@@ -129,7 +141,7 @@ public class PostService {
                 throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return foundPosts.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
                     .orElse(null); // 사진이 없을 경우 null 반환
@@ -165,7 +177,7 @@ public class PostService {
                 throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return postEntities.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
                     .orElse(null); // 사진이 없을 경우 null 반환
@@ -204,7 +216,7 @@ public class PostService {
                 throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         }
         return postEntities.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst()
                     .orElse(null);
@@ -228,7 +240,7 @@ public class PostService {
     public PostRes getUniquePost(Long postId) {
         try {
             PostEntity foundPost = postRepository.findById(postId).orElseThrow(PostDoesNotExistException::new);
-            List<byte[]> photosByte = foundPost.getPhotos().stream()
+            List<byte[]> photosByte = foundPost.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .collect(Collectors.toList());
             return new PostRes(
@@ -252,7 +264,7 @@ public class PostService {
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         if(postEntity.get().getCustomer().getCustomerId()!= postUpdateReq.getCustomerId())
             throw new CustomerDoesNotMatchException();
-        Set<PhotoEntity> photos = new HashSet<>();
+        List<PhotoEntity> photos = Collections.emptyList();
         for(byte[] photoData:postUpdateReq.getPhotos()){
             PhotoEntity photo=new PhotoEntity();
             photo.setData(photoData);
@@ -265,10 +277,10 @@ public class PostService {
         foundPost.setLikes(postUpdateReq.getLikes());
         foundPost.setTitle(postUpdateReq.getTitle());
         foundPost.setBody(postUpdateReq.getBody());
-        foundPost.setPhotos(photos);
+        foundPost.setPhoto(photos);
         foundPost.setType(postUpdateReq.getType());
         foundPost.setScrap(postUpdateReq.getScrap());
-        List<byte[]> photosByte = foundPost.getPhotos().stream()
+        List<byte[]> photosByte = foundPost.getPhoto().stream()
                 .map(PhotoEntity::getData)
                 .collect(Collectors.toList());
         return new PostRes(
@@ -332,5 +344,93 @@ public class PostService {
                 : PageRequest.of(pageNo, 5, Sort.by(Sort.Direction.DESC, criteria));
 
         return postRepository.findAll(pageable).map(PostEntity::toPostOrderRes).getContent();
+    }
+
+    public Long create(PostCreateReqDto requestDto, List<MultipartFile> files) throws Exception{
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(requestDto.getCustomerId());
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+        CustomerEntity customer = opCustomer.get();
+
+        PostEntity post = PostEntity.builder()
+                .updateDate(LocalDateTime.now())
+                .comments(Long.valueOf(0))
+                .likes(Long.valueOf(0))
+                .title(requestDto.getTitle())
+                .body(requestDto.getBody())
+                .scrap(Long.valueOf(0))
+                .type(requestDto.getType())
+                .customer(customer)
+                .build();
+
+        int check = 1;
+        for (MultipartFile image : files) {
+            if (image.isEmpty()) check = 0;
+        }
+
+        if(check == 1) {
+            List<PhotoEntity> fileList = new ArrayList<>();
+
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            String current_date = now.format(dateTimeFormatter);
+
+            String absolutePath = new File("").getAbsolutePath() + File.separator;
+
+            String path = "images" + File.separator + current_date;
+            File file = new File(path);
+
+            if(!file.exists()) {
+                boolean wasSuccessful = file.mkdirs();
+
+                if (!wasSuccessful) {
+                    System.out.println("file: was not successful");
+                }
+            }
+
+            for(MultipartFile multipartFile : files){
+
+                String originalFileExtension;
+                String contentType = multipartFile.getContentType();
+
+                if(ObjectUtils.isEmpty(contentType)){
+                    break;
+                } else {
+                    if (contentType.contains("image/jpeg")) {
+                        originalFileExtension = ".jpg";
+                    } else if (contentType.contains("image/png")) {
+                        originalFileExtension = ".png";
+                    } else {
+                        break;
+                    }
+                }
+
+                UUID uuid = UUID.randomUUID();
+                String newFileName = uuid + originalFileExtension;
+
+                PhotoEntity photo = PhotoEntity.builder()
+                        .origFileName(multipartFile.getOriginalFilename())
+                        .filePath(path + File.separator + newFileName)
+                        .fileSize(multipartFile.getSize())
+                        .build();
+
+                fileList.add(photo);
+
+                file = new File(absolutePath + path + File.separator + newFileName);
+                multipartFile.transferTo(file);
+
+                file.setWritable(true);
+                file.setReadable(true);
+
+            }
+
+            for(PhotoEntity photo : fileList){
+                photo.setPost(post);
+                photoRepository.save(photo);
+            }
+
+        }
+
+        return postRepository.save(post).getPostId();
     }
 }

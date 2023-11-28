@@ -1,14 +1,19 @@
 package com.example.devkorproject.post.controller;
 
 import com.example.devkorproject.common.dto.HttpDataResponse;
+import com.example.devkorproject.customer.entity.CustomerEntity;
+import com.example.devkorproject.customer.service.CustomerService;
 import com.example.devkorproject.post.dto.*;
 import com.example.devkorproject.post.service.PostService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,9 +21,16 @@ import java.util.List;
 @Transactional
 public class PostController {
     private final PostService postService;
+
+//    @PostMapping("")
+//    public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
+//        return HttpDataResponse.of(postService.createPost(postReq));
+//    }
     @PostMapping("")
-    public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
-        return HttpDataResponse.of(postService.createPost(postReq));
+    public Long createPhoto(@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
+        List<MultipartFile> photos = Collections.emptyList();
+        if(files.isPresent()) photos = files.get();
+        return postService.create(postCreateReqDto, photos);
     }
     @PostMapping("/comment")
     public HttpDataResponse<CommentRes> giveComment(@RequestBody CommentReq commentReq){
@@ -65,4 +77,7 @@ public class PostController {
     public HttpDataResponse<List<PostOrderRes>> orderPost(@RequestBody PostOrderReq postOrderReq) {
         return HttpDataResponse.of(postService.orderPost(postOrderReq));
     }
+
+
+
 }

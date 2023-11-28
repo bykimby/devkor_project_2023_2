@@ -7,11 +7,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.awt.*;
-import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,6 +24,7 @@ public class PostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postId;
+
     @UpdateTimestamp
     @Column(name = "updateDate", nullable = false)
     private LocalDateTime updateDate;
@@ -46,12 +46,18 @@ public class PostEntity {
 
     @Column(name = "type", nullable = false)
     private String type;
+
     @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
     private Set<CommentEntity> commentEntities=new HashSet<>();
-    @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
-    private Set<PhotoEntity> photos;
-    //중복 x 허용하는 것으로 list보다 관리 용이
-    //orphan removal은 부모 엔티티 삭제되면 자식 entity들도 삭제되도록 함
+
+//    @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
+//    private Set<PhotoEntity> photos;
+//    //중복 x 허용하는 것으로 list보다 관리 용이
+//    //orphan removal은 부모 엔티티 삭제되면 자식 entity들도 삭제되도록 함
+
+    @OneToMany(mappedBy = "post", cascade = {CascadeType.PERSIST}, orphanRemoval = true)
+    private List<PhotoEntity> photo = new ArrayList<PhotoEntity>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customerId")
     private CustomerEntity customer;
@@ -65,6 +71,7 @@ public class PostEntity {
                 ))
                 .collect(Collectors.toSet());
     }
+
 
     public PostOrderRes toPostOrderRes() {
         return new PostOrderRes(
