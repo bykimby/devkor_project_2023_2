@@ -324,7 +324,7 @@ public class DietService {
 
 //        현재 날짜 구하기
         LocalDateTime now = LocalDateTime.now();
-        String imageUrl = "image";
+//        String imageUrl = "image";
 
         DietEntity dietEntity = DietEntity.builder()
                 .ingredients(ingredients)
@@ -333,7 +333,7 @@ public class DietService {
                 .allergy(simpleDiet.getBaby().getAllergy())
                 .needs(simpleDiet.getBaby().getNeeds())
                 .keyword(dietReqDto.getKeyword())//#빨리 먹을 수 있는
-                .imageUrl(imageUrl)
+//                .imageUrl(imageUrl)
                 .date(now)
                 .build();
         dietRepository.save(dietEntity);

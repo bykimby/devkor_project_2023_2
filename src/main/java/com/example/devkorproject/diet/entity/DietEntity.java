@@ -40,8 +40,8 @@ public class DietEntity {
     @Column(name = "keyword", nullable = false)
     private String keyword;
 
-    @Column(name = "image", nullable = false)
-    private String imageUrl;
+//    @Column(name = "image", nullable = false)
+//    private String imageUrl;
 
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
