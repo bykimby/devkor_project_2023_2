@@ -35,6 +35,8 @@ public class PostService {
     private final ScrapRepository scrapRepository;
     private final LikeRepository likeRepository;
 
+    private final PhotoRepository photoRepository;
+
 
     
 
@@ -338,7 +340,7 @@ public class PostService {
         if(postEntities.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         return postEntities.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst()
                     .orElse(null);
@@ -378,7 +380,7 @@ public class PostService {
                 likes, startPostId, PageRequest.of(0, pageSize)
         );}
         return postEntities.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst()
                     .orElse(null);
@@ -419,7 +421,7 @@ public class PostService {
             );
         }
         return postEntities.stream().map(post -> {
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst()
                     .orElse(null);
@@ -482,7 +484,7 @@ public class PostService {
         return scrapEntities.stream()
                 .filter(scrap -> scrap.getPost().getType().equals(type)).map(scrap -> {
             PostEntity post=scrap.getPost();
-            byte[] firstPhotoData = post.getPhotos().stream()
+            byte[] firstPhotoData = post.getPhoto().stream()
                     .map(PhotoEntity::getData)
                     .findFirst() // 첫 번째 사진 데이터만 가져옵니다.
                     .orElse(null); // 사진이 없을 경우 null 반환
