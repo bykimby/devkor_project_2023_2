@@ -21,9 +21,9 @@ public class PhotoEntity {
     @Column(nullable = false)
     private Long fileSize;
 
-    @Lob
-    @Column(name="data")
-    private byte[] data;
+//    @Lob
+//    @Column(name="data")
+//    private byte[] data;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="postId")

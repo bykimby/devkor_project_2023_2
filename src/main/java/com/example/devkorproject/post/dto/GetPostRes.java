@@ -14,7 +14,8 @@ public class GetPostRes {
     private Long comments;
     private Long likes;
     private String title;
-    private List<byte[]> photo;
+//    private List<byte[]> photo;
+    private List<String> filePath;
     private String type;
     private String customerName;
 

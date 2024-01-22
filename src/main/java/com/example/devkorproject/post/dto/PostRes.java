@@ -16,7 +16,8 @@ public class PostRes {
     private Long likes;
     private String title;
     private String body;
-    private List<byte[]> photos;
+//    private List<byte[]> photos;
+    private List<String> filePaths;
     private Long scrap;
     private String type;
 }
