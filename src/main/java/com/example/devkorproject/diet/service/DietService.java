@@ -413,7 +413,7 @@ public class DietService {
 //
 //    }
 
-    public void pressHeart(Long simpleDietId){
+    public PressDto pressHeart(Long simpleDietId){
 
         Optional<SimpleDietEntity> opSimpleDiet = simpleDietRepository.findBySimpleDietId(simpleDietId);
         if(opSimpleDiet.isEmpty())
@@ -424,10 +424,12 @@ public class DietService {
         if(simpleDiet.isHeart()){
             simpleDiet.setHeart(false);
             simpleDietRepository.save(simpleDiet);
-        }else{
+        }else {
             simpleDiet.setHeart(true);
             simpleDietRepository.save(simpleDiet);
         }
+
+        return new PressDto(simpleDiet.isHeart());
     }
 
     public List<HeartDietResDto> getHeartDiet(Long customerId){
