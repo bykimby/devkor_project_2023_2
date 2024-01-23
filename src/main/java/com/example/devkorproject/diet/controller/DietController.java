@@ -38,8 +38,8 @@ public class DietController {
     }
 
     @PutMapping("/press")
-    public void pressHeart (@RequestParam Long simpleDietId){
-        dietService.pressHeart(simpleDietId);
+    public HttpDataResponse<PressDto> pressHeart (@RequestParam Long simpleDietId){
+        return HttpDataResponse.of(dietService.pressHeart(simpleDietId));
     }
 
     @GetMapping("/heart")
