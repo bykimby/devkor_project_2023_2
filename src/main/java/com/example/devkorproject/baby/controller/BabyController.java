@@ -20,16 +20,19 @@ public class BabyController {
     //Todo
     //아기 등록, 아기 정보 수정
     @PostMapping("/enroll")
-    public HttpDataResponse<BabyResDto> enrollBaby(@RequestBody BabyReqDto babyReqDto){
-        return HttpDataResponse.of(babyService.enrollBaby(babyReqDto));
+    public HttpDataResponse<BabyResDto> enrollBaby(@RequestHeader("Authorization") String authHeader,@RequestBody BabyReqDto babyReqDto){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(babyService.enrollBaby(token,babyReqDto));
     }
 
     @PutMapping("")
-    public HttpDataResponse<BabyModifyResDto> modifyBaby(@RequestBody BabyModifyReqDto babyModifyReqDto){
-        return HttpDataResponse.of(babyService.modifyBaby(babyModifyReqDto));
+    public HttpDataResponse<BabyModifyResDto> modifyBaby(@RequestHeader("Authorization") String authHeader,@RequestBody BabyModifyReqDto babyModifyReqDto){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(babyService.modifyBaby(token,babyModifyReqDto));
     }
     @GetMapping("")
-    public HttpDataResponse<List<BabyModifyResDto>> getCustomerBaby(@RequestHeader Long customerId){
-        return HttpDataResponse.of(babyService.getCustomerBaby(customerId));
+    public HttpDataResponse<List<BabyModifyResDto>> getCustomerBaby(@RequestHeader("Authorization") String authHeader){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(babyService.getCustomerBaby(token));
     }
 }

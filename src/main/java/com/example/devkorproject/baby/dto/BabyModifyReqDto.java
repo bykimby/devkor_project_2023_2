@@ -6,7 +6,7 @@ import lombok.*;
 @Getter
 @Setter
 public class BabyModifyReqDto {
-    private Long customerId;
+
     private Long babyId;
     private String babyName;
     private String birth;
