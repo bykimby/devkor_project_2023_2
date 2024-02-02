@@ -27,22 +27,26 @@ public class PostController {
 //        return HttpDataResponse.of(postService.createPost(postReq));
 //    }
     @PostMapping("")
-    public Long createPhoto(@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
+    public Long createPhoto(@RequestHeader("Authorization") String authHeader,@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
+        String token=authHeader.substring(7);
         List<MultipartFile> photos = Collections.emptyList();
         if(files.isPresent()) photos = files.get();
-        return postService.create(postCreateReqDto, photos);
+        return postService.create(token,postCreateReqDto, photos);
     }
     @PostMapping("/comment")
-    public HttpDataResponse<CommentRes> giveComment(@RequestBody CommentReq commentReq){
-        return HttpDataResponse.of(postService.giveComment(commentReq));
+    public HttpDataResponse<CommentRes> giveComment(@RequestHeader("Authorization") String authHeader,@RequestBody CommentReq commentReq){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.giveComment(token,commentReq));
     }
     @PostMapping("/likes")
-    public HttpDataResponse<LikesRes> giveLikes(@RequestBody LikesReq likesReq){
-        return HttpDataResponse.of(postService.giveLikes(likesReq));
+    public HttpDataResponse<LikesRes> giveLikes(@RequestHeader("Authorization") String authHeader,@RequestBody LikesReq likesReq){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.giveLikes(token,likesReq));
     }
     @PostMapping("/scrap")
-    public HttpDataResponse<ScrapRes> giveScrap(@RequestBody ScrapReq scrapReq){
-        return HttpDataResponse.of(postService.giveScrap(scrapReq));
+    public HttpDataResponse<ScrapRes> giveScrap(@RequestHeader("Authorization") String authHeader,@RequestBody ScrapReq scrapReq){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.giveScrap(token,scrapReq));
     }
     @GetMapping("/unique")
     public HttpDataResponse<PostRes> getUniquePost(@RequestParam Long postId){
@@ -54,8 +58,9 @@ public class PostController {
     }
 
     @GetMapping("/customer")
-    public HttpDataResponse<List<GetPostRes>> getCustomerPosts(@RequestHeader("customerId") Long customerId,@RequestParam Long startPostId){
-        return HttpDataResponse.of(postService.getCustomerPosts(customerId,startPostId));
+    public HttpDataResponse<List<GetPostRes>> getCustomerPosts(@RequestHeader("Authorization") String authHeader,@RequestParam Long startPostId){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.getCustomerPosts(token,startPostId));
     }
 
     @GetMapping("/keyword")
@@ -72,17 +77,20 @@ public class PostController {
         return HttpDataResponse.of(postService.getComments(postId));
     }
     @GetMapping("/scrap")
-    public HttpDataResponse<List<GetPostRes>> getScrap(@RequestParam Long customerId, String type){
-        return HttpDataResponse.of(postService.getScrap(customerId,type));
+    public HttpDataResponse<List<GetPostRes>> getScrap(@RequestHeader("Authorization") String authHeader, String type){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.getScrap(token,type));
     }
 
     @PutMapping("")
-    public HttpDataResponse<PostRes> updatePost(@RequestBody PostUpdateReq postUpdateReq){
-        return HttpDataResponse.of(postService.updatePost(postUpdateReq));
+    public HttpDataResponse<PostRes> updatePost(@RequestHeader("Authorization") String authHeader,@RequestBody PostUpdateReq postUpdateReq){
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.updatePost(token,postUpdateReq));
     }
     @DeleteMapping("")
-    public void deletePost(@RequestBody PostDeleteReq postDeleteReq){
-        postService.deletePost(postDeleteReq);
+    public void deletePost(@RequestHeader("Authorization") String authHeader,@RequestBody PostDeleteReq postDeleteReq){
+        String token=authHeader.substring(7);
+        postService.deletePost(token,postDeleteReq);
     }
 
     @GetMapping("/weekly")//주간 인기글

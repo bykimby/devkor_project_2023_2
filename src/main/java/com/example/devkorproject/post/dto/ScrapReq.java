@@ -6,6 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ScrapReq {
-    private Long customerId;
     private Long postId;
 }

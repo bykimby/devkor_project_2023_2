@@ -1,5 +1,6 @@
 package com.example.devkorproject.post.service;
 
+import com.example.devkorproject.auth.jwt.JwtUtil;
 import com.example.devkorproject.common.constants.ErrorCode;
 import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.entity.CustomerEntity;
@@ -16,7 +17,6 @@ import com.example.devkorproject.post.repository.ScrapRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,17 +36,19 @@ public class PostService {
     private final LikeRepository likeRepository;
 
     private final PhotoRepository photoRepository;
+    private final JwtUtil jwtUtil;
 
 
     
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository, PhotoRepository photoRepository) {
+    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository, PhotoRepository photoRepository, JwtUtil jwtUtil) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.scrapRepository = scrapRepository;
         this.likeRepository = likeRepository;
         this.photoRepository = photoRepository;
+        this.jwtUtil = jwtUtil;
     }
 
 //    public PostRes createPost(PostReq postReq){//photo는 따로 요청
@@ -206,7 +208,10 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-    public List<GetPostRes> getCustomerPosts(Long customerId,Long startPostId) {
+    public List<GetPostRes> getCustomerPosts(String token,Long startPostId) {
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         List<PostEntity> postEntities;
         if(startPostId==0){
             postEntities = postRepository.findTop20ByCustomer_CustomerIdOrderByUpdateDateDesc(customerId);
@@ -264,11 +269,14 @@ public class PostService {
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST, "Requested post does not exist", ex);
         }
     }
-    public PostRes updatePost(PostUpdateReq postUpdateReq){
+    public PostRes updatePost(String token,PostUpdateReq postUpdateReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> postEntity=postRepository.findById(postUpdateReq.getPostId());
         if(postEntity.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
-        if(postEntity.get().getCustomer().getCustomerId()!= postUpdateReq.getCustomerId())
+        if(postEntity.get().getCustomer().getCustomerId()!= customerId)
             throw new CustomerDoesNotMatchException();
         List<PhotoEntity> photos = Collections.emptyList();
         for(String filePath:postUpdateReq.getFilePaths()){
@@ -301,21 +309,27 @@ public class PostService {
                 foundPost.getType()
         );
     }
-    public void deletePost(PostDeleteReq postDeleteReq){
+    public void deletePost(String token,PostDeleteReq postDeleteReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> toDeletePost=postRepository.findById(postDeleteReq.getPostId());
         if(toDeletePost.isEmpty())
             throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
         PostEntity deletePost=toDeletePost.get();
-        if(deletePost.getCustomer().getCustomerId()!= postDeleteReq.getCustomerId())
+        if(deletePost.getCustomer().getCustomerId()!= customerId)
             throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         postRepository.delete(deletePost);
     }
-    public CommentRes giveComment(CommentReq commentReq){
+    public CommentRes giveComment(String token,CommentReq commentReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> opPost=postRepository.findById(commentReq.getPostId());
         if(opPost.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         PostEntity post=opPost.get();
-        Optional<CustomerEntity> opCustomer=customerRepository.findById(commentReq.getCustomerId());
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(customerId);
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
@@ -446,12 +460,15 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-    public LikesRes giveLikes(LikesReq likesReq){
+    public LikesRes giveLikes(String token,LikesReq likesReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> opPost=postRepository.findById(likesReq.getPostId());
         if(opPost.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         PostEntity post=opPost.get();
-        Optional<CustomerEntity> opCustomer=customerRepository.findById(likesReq.getCustomerId());
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(customerId);
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
@@ -464,12 +481,15 @@ public class PostService {
         customer.setMyLikes(customer.getMyLikes()+1);
         return new LikesRes(post.getPostId(), post.getLikes());
     }
-    public ScrapRes giveScrap(ScrapReq scrapReq){
+    public ScrapRes giveScrap(String token,ScrapReq scrapReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> opPost=postRepository.findById(scrapReq.getPostId());
         if(opPost.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         PostEntity post=opPost.get();
-        Optional<CustomerEntity> opCustomer=customerRepository.findById(scrapReq.getCustomerId());
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(customerId);
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
@@ -481,7 +501,10 @@ public class PostService {
         post.setScrap(post.getScrap()+1);
         return new ScrapRes(post.getPostId(),post.getScrap());
     }
-    public List<GetPostRes> getScrap(Long customerId, String type){
+    public List<GetPostRes> getScrap(String token, String type){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         List<ScrapEntity> scrapEntities=scrapRepository.findByCustomer_CustomerId(customerId);
         if(scrapEntities.isEmpty())
             throw new GeneralException(ErrorCode.SCRAP_DOES_NOT_EXIST);
@@ -510,8 +533,11 @@ public class PostService {
         }).collect(Collectors.toList());
     }
 
-    public Long create(PostCreateReqDto requestDto, List<MultipartFile> files) throws Exception{
-        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(requestDto.getCustomerId());
+    public Long create(String token,PostCreateReqDto requestDto, List<MultipartFile> files) throws Exception{
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
         CustomerEntity customer = opCustomer.get();

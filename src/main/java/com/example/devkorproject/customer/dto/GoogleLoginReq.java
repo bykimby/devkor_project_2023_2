@@ -9,8 +9,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class LoginReq {
+public class GoogleLoginReq {
     private String email;
-    private String password;
-
 }

@@ -3,6 +3,7 @@ package com.example.devkorproject.customer.service;
 import com.example.devkorproject.auth.jwt.JwtUtil;
 import com.example.devkorproject.common.constants.ErrorCode;
 import com.example.devkorproject.common.exception.GeneralException;
+import com.example.devkorproject.customer.dto.GoogleLoginReq;
 import com.example.devkorproject.customer.dto.LoginReq;
 import com.example.devkorproject.customer.dto.LoginRes;
 import com.example.devkorproject.customer.entity.CustomerEntity;
@@ -37,6 +38,15 @@ public class CustomerService {
         CustomerEntity customer = opCustomer.get();
         if (!encoder.matches(loginReq.getPassword(), customer.getPassword()))
             throw new GeneralException(ErrorCode.WRONG_PASSWORD);
+        String accessToken= jwtUtil.createToken(customer.getCustomerId());
+        return new LoginRes(accessToken);
+    }
+    public LoginRes googleLogin(GoogleLoginReq googleLoginReq){
+        Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByEmail(googleLoginReq.getEmail());
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_NAME_DOES_NOT_EXIST);
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        CustomerEntity customer = opCustomer.get();
         String accessToken= jwtUtil.createToken(customer.getCustomerId());
         return new LoginRes(accessToken);
     }

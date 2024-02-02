@@ -3,6 +3,7 @@ package com.example.devkorproject.customer.controller;
 import com.example.devkorproject.baby.dto.BabyReqDto;
 import com.example.devkorproject.baby.dto.BabyResDto;
 import com.example.devkorproject.common.dto.HttpDataResponse;
+import com.example.devkorproject.customer.dto.GoogleLoginReq;
 import com.example.devkorproject.customer.dto.LoginReq;
 import com.example.devkorproject.customer.dto.LoginRes;
 import com.example.devkorproject.customer.dto.TempCustomer;
@@ -22,6 +23,10 @@ public class CustomerController {
     @PostMapping("/login")
     public HttpDataResponse<LoginRes> login(@RequestBody LoginReq loginReq){
         return HttpDataResponse.of(customerService.login(loginReq));
+    }
+    @PostMapping("/googleLogin")
+    public HttpDataResponse<LoginRes> googleLogin(@RequestBody GoogleLoginReq googleLoginReq){
+        return HttpDataResponse.of(customerService.googleLogin(googleLoginReq));
     }
 
 }

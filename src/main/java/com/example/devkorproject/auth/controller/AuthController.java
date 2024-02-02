@@ -21,12 +21,17 @@ public class AuthController {
     public HttpDataResponse<RegisterRes> Register(@RequestBody RegisterReq registerReq){
         return HttpDataResponse.of(authService.register(registerReq));
     }
+
     @GetMapping("/checkName")
     public HttpDataResponse<Boolean> checkNickname(@RequestParam String customerName){
         return HttpDataResponse.of(authService.checkCustomerName(customerName));
     }
     @GetMapping("/checkEmail")
     public HttpDataResponse<Boolean> checkEmail(@RequestParam String email){
+        return HttpDataResponse.of(authService.checkEmail(email));
+    }
+    @GetMapping("/checkGoogleEmail")
+    public HttpDataResponse<Boolean> checkGoogleEmail(@RequestParam String email){
         return HttpDataResponse.of(authService.checkEmail(email));
     }
 }
