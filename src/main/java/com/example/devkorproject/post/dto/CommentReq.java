@@ -8,5 +8,4 @@ import lombok.Data;
 public class CommentReq {
     private Long postId;
     private String contents;
-
 }

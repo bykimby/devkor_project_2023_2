@@ -9,10 +9,7 @@ import com.example.devkorproject.customer.dto.LoginRes;
 import com.example.devkorproject.customer.dto.TempCustomer;
 import com.example.devkorproject.customer.service.CustomerService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,9 +21,16 @@ public class CustomerController {
     public HttpDataResponse<LoginRes> login(@RequestBody LoginReq loginReq){
         return HttpDataResponse.of(customerService.login(loginReq));
     }
+
+
+    @PostMapping("/fcmToken")
+    public void saveFCMToken(@RequestHeader Long customerId, @RequestBody String fcmToken){
+        customerService.saveFCMToken(customerId, fcmToken);
+
     @PostMapping("/googleLogin")
     public HttpDataResponse<LoginRes> googleLogin(@RequestBody GoogleLoginReq googleLoginReq){
         return HttpDataResponse.of(customerService.googleLogin(googleLoginReq));
+
     }
 
 }
