@@ -5,6 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 babymeal_.pem
+firebase_service_key.json
 
 ### STS ###
 .apt_generated

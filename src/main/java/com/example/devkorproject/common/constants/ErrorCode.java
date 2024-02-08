@@ -27,7 +27,8 @@ public enum ErrorCode {
     CUSTOMER_DOES_NOT_MATCH(10001,HttpStatus.BAD_REQUEST,"Requested customer does not match"),
     FRIDGE_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested fridge does not found"),
     CUSTOMER_NAME_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested customer name does not found"),
-    SCRAP_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested scrap does not found")
+    SCRAP_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Requested scrap does not found"),
+    FCMTOKEN_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST, "Requested fcmToken does not found")
     ;
     private final Integer code;
     private final HttpStatus httpStatus;

@@ -6,10 +6,7 @@ import com.example.devkorproject.common.dto.HttpDataResponse;
 import com.example.devkorproject.customer.dto.TempCustomer;
 import com.example.devkorproject.customer.service.CustomerService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,4 +18,10 @@ public class CustomerController {
     public HttpDataResponse<TempCustomer> TempRegister(@RequestBody TempCustomer tempCustomer){
         return HttpDataResponse.of(customerService.TempRegister(tempCustomer));
     }
+
+    @PostMapping("/fcmToken")
+    public void saveFCMToken(@RequestHeader Long customerId, @RequestBody String fcmToken){
+        customerService.saveFCMToken(customerId, fcmToken);
+    }
+
 }

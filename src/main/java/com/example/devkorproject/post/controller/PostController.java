@@ -1,5 +1,6 @@
 package com.example.devkorproject.post.controller;
 
+import com.example.devkorproject.alarm.service.FCMService;
 import com.example.devkorproject.common.dto.HttpDataResponse;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.service.CustomerService;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,7 @@ import java.util.Optional;
 @Transactional
 public class PostController {
     private final PostService postService;
+    private final FCMService fcmService;
 
 //    @PostMapping("")
 //    public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
@@ -33,11 +36,11 @@ public class PostController {
         return postService.create(postCreateReqDto, photos);
     }
     @PostMapping("/comment")
-    public HttpDataResponse<CommentRes> giveComment(@RequestBody CommentReq commentReq){
+    public HttpDataResponse<CommentRes> giveComment(@RequestBody CommentReq commentReq) throws IOException {
         return HttpDataResponse.of(postService.giveComment(commentReq));
     }
     @PostMapping("/likes")
-    public HttpDataResponse<LikesRes> giveLikes(@RequestBody LikesReq likesReq){
+    public HttpDataResponse<LikesRes> giveLikes(@RequestBody LikesReq likesReq) throws IOException {
         return HttpDataResponse.of(postService.giveLikes(likesReq));
     }
     @PostMapping("/scrap")

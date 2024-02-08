@@ -1,12 +1,8 @@
 package com.example.devkorproject.diet.entity;
 
-import com.example.devkorproject.baby.entity.BabyEntity;
-import com.example.devkorproject.customer.entity.CustomerEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +21,7 @@ public class DietEntity {
     @Column(name = "ingredients", nullable = false)
     private String ingredients;
 
-    @Column(name = "recipe", nullable = false, length = 512)
+    @Column(name = "recipe", nullable = false, length = 1024)
     private String recipe;
 
     @Column(name = "available")
@@ -37,16 +33,13 @@ public class DietEntity {
     @Column(name = "needs")
     private String needs;
 
-    @Column(name = "keyword", nullable = false)
+    @Column(name = "keyword")
     private String keyword;
-
-//    @Column(name = "image", nullable = false)
-//    private String imageUrl;
 
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
 
     @OneToMany(mappedBy = "diet", orphanRemoval = true)
     @Builder.Default
-    private List<SimpleDietEntity> simplediets = new ArrayList<SimpleDietEntity>();
+    private List<SimpleDietEntity> simpleDiets = new ArrayList<SimpleDietEntity>();
 }

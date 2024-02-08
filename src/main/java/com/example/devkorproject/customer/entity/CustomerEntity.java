@@ -47,6 +47,9 @@ public class CustomerEntity {
     @Column(name = "myComments", nullable = false)
     private Long myComments;
 
+    @Column(name = "fcmToken")
+    private String fcmToken;
+
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
     @Builder.Default
     private List<BabyEntity> babies = new ArrayList<BabyEntity>();

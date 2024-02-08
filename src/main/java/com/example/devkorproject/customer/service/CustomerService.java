@@ -39,4 +39,24 @@ public class CustomerService {
         CustomerEntity customer = opCustomer.get();
         return customer;
     }
+
+    public void saveFCMToken(Long customerId, String fcmToken){
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+        CustomerEntity customer = opCustomer.get();
+        customer.setFcmToken(fcmToken);
+    }
+
+    public String searchFCMTokenByCustomerId(Long customerId){
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+
+        Optional<String> opFcmToken = customerRepository.findFcmTokenByCustomerId(customerId);
+        if(opFcmToken.isEmpty())
+            throw new GeneralException(ErrorCode.FCMTOKEN_DOES_NOT_EXIST.getMessage());
+
+        return opFcmToken.get();
+    }
 }

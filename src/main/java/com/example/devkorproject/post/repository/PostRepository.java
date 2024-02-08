@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public interface PostRepository extends JpaRepository<PostEntity, Long> {
@@ -37,4 +38,5 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     List<PostEntity> findByTypeAndLikesLessThanEqualAndPostIdLessThanOrderByLikesDescUpdateDateAsc(
             String type,Long likes, Long startPostId, Pageable pageable);
 
+    Optional<String> findCustomerFcmTokenByPostId(Long postId);
 }
