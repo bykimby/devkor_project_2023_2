@@ -24,9 +24,9 @@ public class CustomerController {
 
 
     @PostMapping("/fcmToken")
-    public void saveFCMToken(@RequestHeader Long customerId, @RequestBody String fcmToken){
+    public void saveFCMToken(@RequestHeader Long customerId, @RequestBody String fcmToken) {
         customerService.saveFCMToken(customerId, fcmToken);
-
+    }
     @PostMapping("/googleLogin")
     public HttpDataResponse<LoginRes> googleLogin(@RequestBody GoogleLoginReq googleLoginReq){
         return HttpDataResponse.of(customerService.googleLogin(googleLoginReq));

@@ -8,6 +8,7 @@ import com.example.devkorproject.customer.dto.LoginReq;
 import com.example.devkorproject.customer.dto.LoginRes;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.repository.CustomerRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,16 +41,17 @@ public class CustomerService {
         customer.setFcmToken(fcmToken);
     }
 
-    public String searchFCMTokenByCustomerId(Long customerId){
+    public String searchFCMTokenByCustomerId(Long customerId) {
         Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
-        if(opCustomer.isEmpty())
+        if (opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
 
         Optional<String> opFcmToken = customerRepository.findFcmTokenByCustomerId(customerId);
-        if(opFcmToken.isEmpty())
+        if (opFcmToken.isEmpty())
             throw new GeneralException(ErrorCode.FCMTOKEN_DOES_NOT_EXIST.getMessage());
 
         return opFcmToken.get();
+    }
 
     public LoginRes login(LoginReq loginReq){
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByEmail(loginReq.getEmail());
