@@ -7,5 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class DeleteFridgeReq {
     private Long fridgeId;
-    private Long customerId;
+
 }

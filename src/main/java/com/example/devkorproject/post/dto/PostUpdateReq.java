@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class PostUpdateReq {
     private Long postId;
-    private Long customerId;
     private Long comments;
     private Long likes;
     private String title;

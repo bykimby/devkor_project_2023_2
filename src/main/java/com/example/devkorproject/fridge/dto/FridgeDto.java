@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class FridgeDto {
-    private Long customerId;
     private String ingredients;
     private boolean active;
     private String emoticon;

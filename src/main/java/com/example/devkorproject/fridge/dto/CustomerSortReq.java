@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class CustomerSortReq {
-    private Long customerId;
+
     private List<Long> fridgeIdOrder;
 }

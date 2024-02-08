@@ -1,21 +1,15 @@
 package com.example.devkorproject.fridge.service;
 
+import com.example.devkorproject.auth.jwt.JwtUtil;
 import com.example.devkorproject.common.constants.ErrorCode;
 import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.entity.CustomerEntity;
-import com.example.devkorproject.customer.exception.CustomerDoesNotExistException;
 import com.example.devkorproject.customer.repository.CustomerRepository;
 import com.example.devkorproject.fridge.dto.*;
 import com.example.devkorproject.fridge.entity.FridgeEntity;
-import com.example.devkorproject.fridge.exception.FridgeDoesNotExistException;
 import com.example.devkorproject.fridge.repository.FridgeRepository;
-import com.example.devkorproject.post.dto.PostRes;
-import com.example.devkorproject.post.entity.PhotoEntity;
-import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,13 +18,18 @@ import java.util.stream.Collectors;
 public class FridgeService {
     private final FridgeRepository fridgeRepository;
     private final CustomerRepository customerRepository;
-    public FridgeService(FridgeRepository fridgeRepository, CustomerRepository customerRepository) {
+    private final JwtUtil jwtUtil;
+    public FridgeService(FridgeRepository fridgeRepository, CustomerRepository customerRepository, JwtUtil jwtUtil) {
         this.fridgeRepository = fridgeRepository;
         this.customerRepository = customerRepository;
+        this.jwtUtil = jwtUtil;
     }
 
-    public FridgeResFull createFridge(FridgeDto fridgeDto){
-        Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByCustomerId(fridgeDto.getCustomerId());
+    public FridgeResFull createFridge(String token,FridgeDto fridgeDto){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
+        Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
         CustomerEntity customer=opCustomer.get();
@@ -44,7 +43,10 @@ public class FridgeService {
         fridgeRepository.save(fridgeEntity);
         return new FridgeResFull(fridgeEntity.getFrigeId(),fridgeEntity.getIngredients(), fridgeEntity.isActive(), fridgeEntity.getEmoticon());
     }
-    public List<FridgeResDto> getCustomerFridge(Long customerId){
+    public List<FridgeResDto> getCustomerFridge(String token){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerIdOrderByCustomerOrderAsc(customerId);
         if(fridgeEntities.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
@@ -53,12 +55,14 @@ public class FridgeService {
                 fridge.getIngredients()
         )).collect(Collectors.toList());
     }
-    public List<FridgeResDto> saveCustomerOrder(CustomerSortReq customerSortReq){
-        List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerSortReq.getCustomerId());
+    public List<FridgeResDto> saveCustomerOrder(String token,CustomerSortReq customerSortReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
+        List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerId);
         if(fridgeEntities.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST);
         List<Long> fridgeIdOrder = customerSortReq.getFridgeIdOrder();
-
         Map<Long, Integer> orderMap = new HashMap<>();
         for (int i = 0; i < fridgeIdOrder.size(); i++) {
             orderMap.put(fridgeIdOrder.get(i), i + 1); // +1을 해주어 1부터 시작하도록 함
@@ -77,7 +81,10 @@ public class FridgeService {
         }
         return fridgeResDtoList;
     }
-    public List<FridgeResDto> getCustomerFridgeNew(Long customerId){
+    public List<FridgeResDto> getCustomerFridgeNew(String token){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerId);
         if(fridgeEntities.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
@@ -87,7 +94,10 @@ public class FridgeService {
                     fridge.getIngredients()
             )).collect(Collectors.toList());
     }
-    public List<FridgeResDto> getCustomerFridgeOld(Long customerId){
+    public List<FridgeResDto> getCustomerFridgeOld(String token){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         List<FridgeEntity> fridgeEntities=fridgeRepository.findByCustomerCustomerId(customerId);
         if(fridgeEntities.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
@@ -97,12 +107,15 @@ public class FridgeService {
                     fridge.getIngredients()
         )).collect(Collectors.toList());
     }
-    public FridgeResFull updateFridge(FridgeUpReq fridgeUpReq){
+    public FridgeResFull updateFridge(String token,FridgeUpReq fridgeUpReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<FridgeEntity> opFridge=fridgeRepository.findById(fridgeUpReq.getFridgeId());
         if(opFridge.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
         FridgeEntity fridgeEntity=opFridge.get();
-        if(fridgeEntity.getCustomer().getCustomerId()!= fridgeUpReq.getCustomerId())
+        if(fridgeEntity.getCustomer().getCustomerId()!= customerId)
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         fridgeEntity.setIngredients(fridgeUpReq.getIngredients());
         fridgeEntity.setDate(LocalDateTime.now());
@@ -110,7 +123,10 @@ public class FridgeService {
         fridgeEntity.setEmoticon(fridgeEntity.getEmoticon());
         return new FridgeResFull(fridgeEntity.getFrigeId(), fridgeEntity.getIngredients(), fridgeEntity.isActive(), fridgeEntity.getEmoticon());
     }
-    public FridgeResFull getCustomerFridgeUnique(Long customerId, Long fridgeId){
+    public FridgeResFull getCustomerFridgeUnique(String token, Long fridgeId){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<FridgeEntity> opFridge=fridgeRepository.findById(fridgeId);
         if(opFridge.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST);
@@ -119,12 +135,15 @@ public class FridgeService {
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH);
         return new FridgeResFull(fridgeEntity.getFrigeId(), fridgeEntity.getIngredients(), fridgeEntity.isActive(), fridgeEntity.getEmoticon());
     }
-    public void deleteFridge(DeleteFridgeReq deleteFridgeReq){
+    public void deleteFridge(String token,DeleteFridgeReq deleteFridgeReq){
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<FridgeEntity> opFridge=fridgeRepository.findById(deleteFridgeReq.getFridgeId());
         if(opFridge.isEmpty())
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
         FridgeEntity deleteFridge=opFridge.get();
-        if(deleteFridge.getCustomer().getCustomerId()!= deleteFridgeReq.getCustomerId())
+        if(deleteFridge.getCustomer().getCustomerId()!= customerId)
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         fridgeRepository.delete(deleteFridge);
     }

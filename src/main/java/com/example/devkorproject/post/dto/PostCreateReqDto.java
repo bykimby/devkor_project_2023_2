@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class PostCreateReqDto {
-    private Long customerId;
+
     private String title;
     private String body;
     private String type;

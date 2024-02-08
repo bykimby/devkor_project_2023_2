@@ -7,5 +7,4 @@ import lombok.Data;
 @AllArgsConstructor
 public class PostDeleteReq {
     private Long postId;
-    private Long customerId;
 }
