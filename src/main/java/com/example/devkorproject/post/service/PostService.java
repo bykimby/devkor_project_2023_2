@@ -468,17 +468,18 @@ public class PostService {
         if(opPost.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         PostEntity post=opPost.get();
-        Optional<CustomerEntity> opCustomer=customerRepository.findById(customerId);
+        Optional<CustomerEntity> opCustomer=customerRepository.findById(post.getCustomer().getCustomerId());
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
-        CustomerEntity customer=opCustomer.get();
+        CustomerEntity giveCustomer=opCustomer.get();
+        CustomerEntity getCustomer=customerRepository.findById(customerId).get();
         LikeEntity like=LikeEntity.builder()
                 .post(post)
-                .customer(customer)
+                .customer(giveCustomer)
                 .build();
         likeRepository.save(like);
         post.setLikes(post.getLikes()+1);
-        customer.setMyLikes(customer.getMyLikes()+1);
+        getCustomer.setMyLikes(getCustomer.getMyLikes()+1);
         return new LikesRes(post.getPostId(), post.getLikes());
     }
     public ScrapRes giveScrap(String token,ScrapReq scrapReq){

@@ -50,6 +50,7 @@ public class SecurityConfig{
                                 .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                                 .requestMatchers("/auth/**").permitAll()
                                 .requestMatchers("/customer/login").permitAll()
+                                .requestMatchers("/customer/googleLogin").permitAll()
                                 .requestMatchers("/**").hasAuthority("ROLE_USER")
                                 .anyRequest().authenticated())
                 .userDetailsService(customUserDetailService)
