@@ -6,9 +6,12 @@ import com.example.devkorproject.common.exception.GeneralException;
 import com.example.devkorproject.customer.dto.*;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.repository.CustomerRepository;
+
 import com.example.devkorproject.post.entity.CommentEntity;
 import com.example.devkorproject.post.entity.PostEntity;
 import com.example.devkorproject.post.repository.CommentRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,28 @@ public class CustomerService {
         CustomerEntity customer = opCustomer.get();
         return customer;
     }
+
+
+    public void saveFCMToken(Long customerId, String fcmToken){
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
+        if(opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+        CustomerEntity customer = opCustomer.get();
+        customer.setFcmToken(fcmToken);
+    }
+
+    public String searchFCMTokenByCustomerId(Long customerId) {
+        Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
+        if (opCustomer.isEmpty())
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+
+        Optional<String> opFcmToken = customerRepository.findFcmTokenByCustomerId(customerId);
+        if (opFcmToken.isEmpty())
+            throw new GeneralException(ErrorCode.FCMTOKEN_DOES_NOT_EXIST.getMessage());
+
+        return opFcmToken.get();
+    }
+
     public LoginRes login(LoginReq loginReq){
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByEmail(loginReq.getEmail());
         if(opCustomer.isEmpty())
@@ -54,6 +79,7 @@ public class CustomerService {
         CustomerEntity customer = opCustomer.get();
         String accessToken= jwtUtil.createToken(customer.getCustomerId());
         return new LoginRes(accessToken);
+
     }
     public boolean changeCustomerName(Long customerId, ChangeCustomerNameReq changeCustomerNameReq){
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByCustomerId(customerId);

@@ -30,23 +30,34 @@ public class DietController {
     }
 
     @PostMapping("/detail")
-    public HttpDataResponse<DietResDto> getDetailDiet(@RequestParam Long simpleDietId, @RequestBody DietReqDto dietRequestDto){
-        return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, dietRequestDto));
+    public HttpDataResponse<DietResDto> getDetailDiet(@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
+        return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, detailReqDto));
     }
 
-    @GetMapping("/fridge")
-    public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId, @RequestParam String type){
+
+    @PostMapping("/fridge")
+    public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId, @RequestBody FridgeSimpleDto fridgeSimpleDto){
         String token=authHeader.substring(7);
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
-        return HttpDataResponse.of(dietService.getFridgeSimpleDiet(customerId, babyId, type));
+        return HttpDataResponse.of(dietService.getFridgeSimpleDiet(customerId, babyId, fridgeSimpleDto));
     }
 
-    @PostMapping("/fridge/detail")
-    public HttpDataResponse<DietResDto> getFridgeDiet(@RequestParam Long simpleDietId, @RequestBody DietReqDto dietRequestDto){
-        return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, dietRequestDto));
-    }
+    //@PostMapping("/fridge/detail")
+    //public HttpDataResponse<DietResDto> getFridgeDiet(@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
+      //  return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, detailReqDto));
+
+    //@PostMapping("/fridge")
+    //public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestParam Long customerId, @RequestParam Long babyId, @RequestBody FridgeSimpleDto fridgeSimpleDto){
+    //  return HttpDataResponse.of(dietService.getFridgeSimpleDiet(customerId, babyId, fridgeSimpleDto));
+
+    //}
+//
+//    @PostMapping("/fridge/detail")
+//    public HttpDataResponse<DietResDto> getFridgeDiet(@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
+//        return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, detailReqDto));
+//    }
 
     @PutMapping("/press")
     public HttpDataResponse<PressDto> pressHeart (@RequestParam Long simpleDietId){
@@ -63,8 +74,8 @@ public class DietController {
     }
 
     @GetMapping("/heart/view")
-    public HttpDataResponse<DietResDto> getHeartDietView(@RequestParam Long dietId){
-        return HttpDataResponse.of(dietService.getHeartDietView(dietId));
+    public HttpDataResponse<DietResDto> getHeartDietView(@RequestParam Long simpleDietId){
+        return HttpDataResponse.of(dietService.getHeartDietView(simpleDietId));
     }
 
 }

@@ -1,5 +1,7 @@
 package com.example.devkorproject.post.service;
 
+
+import com.example.devkorproject.alarm.service.FCMService;
 import com.example.devkorproject.auth.jwt.JwtUtil;
 import com.example.devkorproject.common.constants.ErrorCode;
 import com.example.devkorproject.common.exception.GeneralException;
@@ -21,6 +23,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -38,10 +41,10 @@ public class PostService {
     private final PhotoRepository photoRepository;
     private final JwtUtil jwtUtil;
 
+    private final FCMService fcmService;
 
-    
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository, PhotoRepository photoRepository, JwtUtil jwtUtil) {
+    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository, PhotoRepository photoRepository, JwtUtil jwtUtil, FCMService fcmService) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
@@ -49,6 +52,7 @@ public class PostService {
         this.likeRepository = likeRepository;
         this.photoRepository = photoRepository;
         this.jwtUtil = jwtUtil;
+        this.fcmService =  fcmService;
     }
 
 //    public PostRes createPost(PostReq postReq){//photo는 따로 요청
@@ -321,7 +325,9 @@ public class PostService {
             throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
         postRepository.delete(deletePost);
     }
-    public CommentRes giveComment(String token,CommentReq commentReq){
+
+
+    public CommentRes giveComment(String token,CommentReq commentReq) throws IOException {
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
@@ -333,6 +339,14 @@ public class PostService {
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
+
+        String targetToken = searchFCMTokenByPostId(commentReq.getPostId());
+        String postTitle = post.getTitle();
+        String customerName = customer.getCustomerName();
+
+        String message = customerName + "님이 " +
+                postTitle + " 글에 댓글을 달았습니다.";
+
         CommentEntity comment=CommentEntity.builder()
                 .post(post)
                 .customer(customer)
@@ -344,8 +358,20 @@ public class PostService {
         post.setComments(post.getComments()+1);
         post.getCommentEntities().add(comment);
         postRepository.save(post);
+
+        fcmService.sendMessageTo(targetToken, "BabyMeal", message);
+
         return new CommentRes(comment.getPost().getPostId(),comment.getContents(),comment.getCustomer().getCustomerName(),comment.getTime());
     }
+
+    public String searchFCMTokenByPostId(Long postId){
+        Optional<String> opFCMToken = postRepository.findCustomerFcmTokenByPostId(postId);
+        if(opFCMToken.isEmpty())
+            throw new GeneralException(ErrorCode.FCMTOKEN_DOES_NOT_EXIST);
+        return opFCMToken.get();
+    }
+
+
     public List<CommentRes> getComments(Long postId){
         Optional<PostEntity> opPost=postRepository.findById(postId);
         if(opPost.isEmpty())
@@ -460,10 +486,14 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-    public LikesRes giveLikes(String token,LikesReq likesReq){
+
+
+
+    public LikesRes giveLikes(String token,LikesReq likesReq)throws IOException{
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
+
         Optional<PostEntity> opPost=postRepository.findById(likesReq.getPostId());
         if(opPost.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
@@ -471,15 +501,34 @@ public class PostService {
         Optional<CustomerEntity> opCustomer=customerRepository.findById(post.getCustomer().getCustomerId());
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
+
         CustomerEntity giveCustomer=opCustomer.get();
         CustomerEntity getCustomer=customerRepository.findById(customerId).get();
+
+        CustomerEntity customer=opCustomer.get();
+
+        String targetToken = searchFCMTokenByPostId(likesReq.getPostId());
+        String postTitle = post.getTitle();
+        String customerName = customer.getCustomerName();
+
+        String message = customerName + "님이 " +
+                postTitle + " 글에 찜을 눌렀습니다.";
+
+
         LikeEntity like=LikeEntity.builder()
                 .post(post)
                 .customer(giveCustomer)
                 .build();
         likeRepository.save(like);
         post.setLikes(post.getLikes()+1);
+
         getCustomer.setMyLikes(getCustomer.getMyLikes()+1);
+
+        customer.setMyLikes(customer.getMyLikes()+1);
+
+        fcmService.sendMessageTo(targetToken, "BabyMeal", message);
+
+
         return new LikesRes(post.getPostId(), post.getLikes());
     }
     public ScrapRes giveScrap(String token,ScrapReq scrapReq){

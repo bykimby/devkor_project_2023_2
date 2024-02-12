@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/customer")
@@ -24,9 +25,16 @@ public class CustomerController {
     public HttpDataResponse<LoginRes> login(@RequestBody LoginReq loginReq){
         return HttpDataResponse.of(customerService.login(loginReq));
     }
+
+
+    @PostMapping("/fcmToken")
+    public void saveFCMToken(@RequestHeader Long customerId, @RequestBody String fcmToken) {
+        customerService.saveFCMToken(customerId, fcmToken);
+    }
     @PostMapping("/googleLogin")
     public HttpDataResponse<LoginRes> googleLogin(@RequestBody GoogleLoginReq googleLoginReq){
         return HttpDataResponse.of(customerService.googleLogin(googleLoginReq));
+
     }
     @GetMapping("/my")
     public HttpDataResponse<GetMyPageRes> getMyPage(@RequestHeader("authorization") String authHeader){

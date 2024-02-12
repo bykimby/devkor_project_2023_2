@@ -1,5 +1,6 @@
 package com.example.devkorproject.post.controller;
 
+import com.example.devkorproject.alarm.service.FCMService;
 import com.example.devkorproject.common.dto.HttpDataResponse;
 import com.example.devkorproject.customer.entity.CustomerEntity;
 import com.example.devkorproject.customer.service.CustomerService;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,7 @@ import java.util.Optional;
 @Transactional
 public class PostController {
     private final PostService postService;
+    private final FCMService fcmService;
 
 //    @PostMapping("")
 //    public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
@@ -34,14 +37,16 @@ public class PostController {
         return postService.create(token,postCreateReqDto, photos);
     }
     @PostMapping("/comment")
-    public HttpDataResponse<CommentRes> giveComment(@RequestHeader("Authorization") String authHeader,@RequestBody CommentReq commentReq){
+
+    public HttpDataResponse<CommentRes> giveComment(@RequestHeader("Authorization") String authHeader,@RequestBody CommentReq commentReq) throws IOException {
         String token=authHeader.substring(7);
         return HttpDataResponse.of(postService.giveComment(token,commentReq));
     }
     @PostMapping("/likes")
-    public HttpDataResponse<LikesRes> giveLikes(@RequestHeader("Authorization") String authHeader,@RequestBody LikesReq likesReq){
+    public HttpDataResponse<LikesRes> giveLikes(@RequestHeader("Authorization") String authHeader,@RequestBody LikesReq likesReq) throws IOException {
         String token=authHeader.substring(7);
         return HttpDataResponse.of(postService.giveLikes(token,likesReq));
+
     }
     @PostMapping("/scrap")
     public HttpDataResponse<ScrapRes> giveScrap(@RequestHeader("Authorization") String authHeader,@RequestBody ScrapReq scrapReq){

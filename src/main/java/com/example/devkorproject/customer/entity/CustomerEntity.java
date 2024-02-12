@@ -45,8 +45,13 @@ public class CustomerEntity {
     @Column(name = "myComments", nullable = false)
     private Long myComments;
 
+
+    @Column(name = "fcmToken")
+    private String fcmToken;
+
     @Column(name="authority")
     private String authority;
+
 
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
     @Builder.Default
