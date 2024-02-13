@@ -1,6 +1,17 @@
 package com.example.devkorproject.alarm.service;
 
+import com.example.devkorproject.alarm.dto.AlarmResDto;
 import com.example.devkorproject.alarm.dto.FCMMessageDto;
+import com.example.devkorproject.alarm.entity.AlarmEntity;
+import com.example.devkorproject.alarm.repository.AlarmRepository;
+import com.example.devkorproject.common.constants.ErrorCode;
+import com.example.devkorproject.common.exception.GeneralException;
+import com.example.devkorproject.customer.entity.CustomerEntity;
+import com.example.devkorproject.customer.exception.CustomerDoesNotExistException;
+import com.example.devkorproject.customer.repository.CustomerRepository;
+import com.example.devkorproject.post.dto.GetPostRes;
+import com.example.devkorproject.post.entity.PhotoEntity;
+import com.example.devkorproject.post.entity.PostEntity;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,18 +25,27 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
 @Slf4j
-public class FCMService {
+public class AlarmService {
 
     private final ObjectMapper objectMapper;
+    private final CustomerRepository customerRepository;
+    private final AlarmRepository alarmRepository;
+
 
     @Autowired
-    public FCMService(ObjectMapper objectMapper){
+    public AlarmService(ObjectMapper objectMapper, CustomerRepository customerRepository, AlarmRepository alarmRepository){
         this.objectMapper = objectMapper;
+        this.customerRepository = customerRepository;
+        this.alarmRepository = alarmRepository;
     }
 
     private String getAccessToken() throws IOException {
@@ -80,4 +100,31 @@ public class FCMService {
         System.out.println(response.body().string());
     }
 
+    public List<AlarmResDto> getRecentAlarm(Long customerId){
+        Optional<CustomerEntity> opCustomerEntity = customerRepository.findCustomerEntityByCustomerId(customerId);
+        if(opCustomerEntity.isEmpty())
+            throw new CustomerDoesNotExistException();
+        CustomerEntity customerEntity = opCustomerEntity.get();
+
+        List<AlarmEntity> alarmEntities;
+        alarmEntities = alarmRepository.findTop20ByCustomer_CustomerIdOrderByDateDesc(customerId);
+        if(alarmEntities.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return alarmEntities.stream().map(alarm -> {
+
+            if(alarm.getCustomer().getCustomerName().isEmpty())
+                throw new GeneralException(ErrorCode.CUSTOMER_NAME_DOES_NOT_EXIST);
+
+            return new AlarmResDto(
+                    alarm.getBody(),
+                    alarm.getDate(),
+                    alarm.getPost().getPostId()
+            );
+        }).collect(Collectors.toList());
+
+
+
+    }
 }

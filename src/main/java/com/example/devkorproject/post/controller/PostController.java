@@ -1,14 +1,11 @@
 package com.example.devkorproject.post.controller;
 
-import com.example.devkorproject.alarm.service.FCMService;
+import com.example.devkorproject.alarm.service.AlarmService;
 import com.example.devkorproject.common.dto.HttpDataResponse;
-import com.example.devkorproject.customer.entity.CustomerEntity;
-import com.example.devkorproject.customer.service.CustomerService;
 import com.example.devkorproject.post.dto.*;
 import com.example.devkorproject.post.service.PostService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +20,7 @@ import java.util.Optional;
 @Transactional
 public class PostController {
     private final PostService postService;
-    private final FCMService fcmService;
+    private final AlarmService alarmService;
 
 //    @PostMapping("")
 //    public HttpDataResponse<PostRes> createPost(@RequestBody PostReq postReq){
