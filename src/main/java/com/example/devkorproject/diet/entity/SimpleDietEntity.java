@@ -29,7 +29,7 @@ public class SimpleDietEntity {
     @Column(name = "time", nullable = false)
     private Long time;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type")
     private String type;
 
     @Column(name = "heart", nullable = false)

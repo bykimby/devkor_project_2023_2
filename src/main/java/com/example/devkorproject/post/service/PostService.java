@@ -1,7 +1,9 @@
 package com.example.devkorproject.post.service;
 
 
-import com.example.devkorproject.alarm.service.FCMService;
+import com.example.devkorproject.alarm.entity.AlarmEntity;
+import com.example.devkorproject.alarm.repository.AlarmRepository;
+import com.example.devkorproject.alarm.service.AlarmService;
 import com.example.devkorproject.auth.jwt.JwtUtil;
 import com.example.devkorproject.common.constants.ErrorCode;
 import com.example.devkorproject.common.exception.GeneralException;
@@ -39,20 +41,25 @@ public class PostService {
     private final LikeRepository likeRepository;
 
     private final PhotoRepository photoRepository;
+
+    private final AlarmRepository alarmRepository;
+
     private final JwtUtil jwtUtil;
 
-    private final FCMService fcmService;
+    private final AlarmService alarmService;
 
 
-    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository, PhotoRepository photoRepository, JwtUtil jwtUtil, FCMService fcmService) {
+    public PostService(CustomerRepository customerRepository, PostRepository postRepository, CommentRepository commentRepository, ScrapRepository scrapRepository, LikeRepository likeRepository, PhotoRepository photoRepository, JwtUtil jwtUtil, AlarmService alarmService,
+                       AlarmRepository alarmRepository) {
         this.customerRepository = customerRepository;
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.scrapRepository = scrapRepository;
         this.likeRepository = likeRepository;
         this.photoRepository = photoRepository;
+        this.alarmRepository = alarmRepository;
         this.jwtUtil = jwtUtil;
-        this.fcmService =  fcmService;
+        this.alarmService = alarmService;
     }
 
 //    public PostRes createPost(PostReq postReq){//photo는 따로 요청
@@ -340,13 +347,6 @@ public class PostService {
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
 
-        String targetToken = searchFCMTokenByPostId(commentReq.getPostId());
-        String postTitle = post.getTitle();
-        String customerName = customer.getCustomerName();
-
-        String message = customerName + "님이 " +
-                postTitle + " 글에 댓글을 달았습니다.";
-
         CommentEntity comment=CommentEntity.builder()
                 .post(post)
                 .customer(customer)
@@ -359,7 +359,26 @@ public class PostService {
         post.getCommentEntities().add(comment);
         postRepository.save(post);
 
-        fcmService.sendMessageTo(targetToken, "BabyMeal", message);
+        if(customerId != post.getCustomer().getCustomerId()) {
+            String targetToken = searchFCMTokenByPostId(commentReq.getPostId());
+            String postTitle = post.getTitle();
+            String customerName = customer.getCustomerName();
+
+            String message = customerName + "님이 " +
+                    postTitle + " 글에 댓글을 달았습니다.";
+
+            alarmService.sendMessageTo(targetToken, "BabyMeal", message);
+            LocalDateTime now = LocalDateTime.now();
+            now.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+            AlarmEntity alarmEntity = AlarmEntity.builder()
+                    .body(message)
+                    .date(now)
+                    .customer(post.getCustomer())
+                    .build();
+            alarmRepository.save(alarmEntity);
+        }
+
 
         return new CommentRes(comment.getPost().getPostId(),comment.getContents(),comment.getCustomer().getCustomerName(),comment.getTime());
     }
@@ -507,14 +526,6 @@ public class PostService {
 
         CustomerEntity customer=opCustomer.get();
 
-        String targetToken = searchFCMTokenByPostId(likesReq.getPostId());
-        String postTitle = post.getTitle();
-        String customerName = customer.getCustomerName();
-
-        String message = customerName + "님이 " +
-                postTitle + " 글에 찜을 눌렀습니다.";
-
-
         LikeEntity like=LikeEntity.builder()
                 .post(post)
                 .customer(giveCustomer)
@@ -525,8 +536,26 @@ public class PostService {
         getCustomer.setMyLikes(getCustomer.getMyLikes()+1);
 
         customer.setMyLikes(customer.getMyLikes()+1);
+        if(customerId != post.getCustomer().getCustomerId()) {
+            String targetToken = searchFCMTokenByPostId(likesReq.getPostId());
+            String postTitle = post.getTitle();
+            String customerName = customer.getCustomerName();
 
-        fcmService.sendMessageTo(targetToken, "BabyMeal", message);
+            String message = customerName + "님이 " +
+                    postTitle + " 글에 찜을 눌렀습니다.";
+
+            alarmService.sendMessageTo(targetToken, "BabyMeal", message);
+
+            LocalDateTime now = LocalDateTime.now();
+            now.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+            AlarmEntity alarmEntity = AlarmEntity.builder()
+                    .body(message)
+                    .date(now)
+                    .customer(post.getCustomer())
+                    .build();
+            alarmRepository.save(alarmEntity);
+        }
 
 
         return new LikesRes(post.getPostId(), post.getLikes());

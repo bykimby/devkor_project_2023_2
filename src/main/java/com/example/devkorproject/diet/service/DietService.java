@@ -180,7 +180,7 @@ public class DietService {
         return simples;
     }
 
-    public List<FridgeSimpleDietResDto> getFridgeSimpleDiet(Long customerId, Long babyId, FridgeSimpleDto fridgeSimpleDto){
+    public List<FridgeSimpleDietResDto> getFridgeSimpleDiet(Long customerId, Long babyId){
         Optional<CustomerEntity> opCustomerEntity = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomerEntity.isEmpty())
             throw new CustomerDoesNotExistException();
@@ -206,15 +206,10 @@ public class DietService {
         String ingredients = ingredientsList.stream().collect(Collectors.joining(","));
         System.out.println(ingredients);
 
-        String type = fridgeSimpleDto.getType();
-        String keyword = fridgeSimpleDto.getKeyword();
-
         List<ChatGptMessage> messages = new ArrayList<>();
         String question = ingredients + "를 활용한 " +
-                keyword + " " +
                 allergyMessage +
-                type +
-                "의 (메뉴명: 숫자없이),(간단한 소개:),(소요시간(분):),(난이도:)를 한 줄씩 알려줘. " +
+                "음식의 (메뉴명: 숫자없이),(간단한 소개:),(소요시간(분):),(난이도:)를 한 줄씩 알려줘. " +
                 "시간은 단위 떼고 숫자만 알려줘. " +
                 "난이도는 간단/보통/복잡 중 하나로 선택해줘. " +
                 "똑같은 방법으로 두 가지 메뉴 알려줘.";
@@ -257,7 +252,6 @@ public class DietService {
                     .description(simple[1])
                     .time(Long.parseLong(simple[2]))
                     .difficulty(simple[3])
-                    .type(type)
                     .heart(false)
                     .customer(customerEntity)
                     .baby(babyEntity)
