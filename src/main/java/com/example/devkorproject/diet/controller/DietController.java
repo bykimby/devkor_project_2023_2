@@ -30,7 +30,7 @@ public class DietController {
     }
 
     @PostMapping("/detail")
-    public HttpDataResponse<DietResDto> getDetailDiet(@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
+    public HttpDataResponse<DietResDto> getDetailDiet(@RequestHeader("authorization") String token,@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
         return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, detailReqDto));
     }
 
@@ -60,7 +60,7 @@ public class DietController {
 //    }
 
     @PutMapping("/press")
-    public HttpDataResponse<PressDto> pressHeart (@RequestParam Long simpleDietId){
+    public HttpDataResponse<PressDto> pressHeart (@RequestHeader("authorization") String authHeader,@RequestParam Long simpleDietId){
         return HttpDataResponse.of(dietService.pressHeart(simpleDietId));
     }
 
@@ -74,7 +74,7 @@ public class DietController {
     }
 
     @GetMapping("/heart/view")
-    public HttpDataResponse<DietResDto> getHeartDietView(@RequestParam Long simpleDietId){
+    public HttpDataResponse<DietResDto> getHeartDietView(@RequestHeader("authorization") String authHeader,@RequestParam Long simpleDietId){
         return HttpDataResponse.of(dietService.getHeartDietView(simpleDietId));
     }
 

@@ -30,11 +30,11 @@ public class PostController {
 //        return HttpDataResponse.of(postService.createPost(postReq));
 //    }
     @PostMapping("")
-    public Long createPhoto(@RequestHeader("Authorization") String authHeader,@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
+    public HttpDataResponse<Long> createPhoto(@RequestHeader("Authorization") String authHeader,@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
         String token=authHeader.substring(7);
         List<MultipartFile> photos = Collections.emptyList();
         if(files.isPresent()) photos = files.get();
-        return postService.create(token,postCreateReqDto, photos);
+        return HttpDataResponse.of(postService.create(token,postCreateReqDto, photos));
     }
     @PostMapping("/comment")
 
@@ -54,11 +54,11 @@ public class PostController {
         return HttpDataResponse.of(postService.giveScrap(token,scrapReq));
     }
     @GetMapping("/unique")
-    public HttpDataResponse<PostRes> getUniquePost(@RequestParam Long postId){
+    public HttpDataResponse<PostRes> getUniquePost(@RequestHeader("Authorization") String authHeader,@RequestParam Long postId){
         return HttpDataResponse.of(postService.getUniquePost(postId));
     }
     @GetMapping("")
-    public HttpDataResponse<List<GetPostRes>> getAllPosts(@RequestParam Long startPostId){
+    public HttpDataResponse<List<GetPostRes>> getAllPosts(@RequestHeader("Authorization") String authHeader,@RequestParam Long startPostId){
         return HttpDataResponse.of(postService.getAllPosts(startPostId));
     }
 
@@ -69,16 +69,16 @@ public class PostController {
     }
 
     @GetMapping("/keyword")
-    public HttpDataResponse<List<GetPostRes>> keywordSearchPost(@RequestParam String keyword,Long startPostId){
+    public HttpDataResponse<List<GetPostRes>> keywordSearchPost(@RequestHeader("Authorization") String authHeader,@RequestParam String keyword,Long startPostId){
         return HttpDataResponse.of(postService.keywordSearchPost(keyword,startPostId));
     }
 
     @GetMapping("/type")
-    public HttpDataResponse<List<GetPostRes>> typeSearchPost(@RequestParam String type,Long startPostId) {
+    public HttpDataResponse<List<GetPostRes>> typeSearchPost(@RequestHeader("Authorization") String authHeader,@RequestParam String type,Long startPostId) {
         return HttpDataResponse.of(postService.typeSearchPost(type,startPostId));
     }
     @GetMapping("/comment")
-    public HttpDataResponse<List<CommentRes>> getComments(@RequestParam Long postId){
+    public HttpDataResponse<List<CommentRes>> getComments(@RequestHeader("Authorization") String authHeader,@RequestParam Long postId){
         return HttpDataResponse.of(postService.getComments(postId));
     }
     @GetMapping("/scrap")
@@ -99,19 +99,16 @@ public class PostController {
     }
 
     @GetMapping("/weekly")//주간 인기글
-    public HttpDataResponse<List<GetPostRes>> weeklyLiked(){
+    public HttpDataResponse<List<GetPostRes>> weeklyLiked(@RequestHeader("Authorization") String authHeader){
         return HttpDataResponse.of(postService.weeklyLiked());
     }
 
     @GetMapping("/likes")//인기순 10개씩
-    public HttpDataResponse<List<GetPostRes>> getLikedPost(@RequestParam Long startPostId){
+    public HttpDataResponse<List<GetPostRes>> getLikedPost(@RequestHeader("Authorization") String authHeader,@RequestParam Long startPostId){
         return HttpDataResponse.of(postService.getLikedPost(startPostId));
     }
     @GetMapping("/type/likes")//type별 인기순 10개씩
-    public HttpDataResponse<List<GetPostRes>> getLikedPostByType(@RequestParam String type,Long startPostId){
+    public HttpDataResponse<List<GetPostRes>> getLikedPostByType(@RequestHeader("Authorization") String authHeader,@RequestParam String type,Long startPostId){
         return HttpDataResponse.of(postService.getLikedPostByType(type,startPostId));
     }
-
-
-
 }

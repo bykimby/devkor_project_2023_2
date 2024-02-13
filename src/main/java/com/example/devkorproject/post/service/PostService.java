@@ -143,14 +143,14 @@ public class PostService {
         if(startPostId==0){
             foundPosts = postRepository.findTop20ByTypeOrderByUpdateDateDesc(type);
             if(foundPosts.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         }else{
             Optional<PostEntity> startPost=postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
             foundPosts=postRepository.findTop20ByTypeAndUpdateDateBeforeOrderByUpdateDateDesc(type, startPost.get().getUpdateDate());
             if(foundPosts.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         }
         return foundPosts.stream().map(post -> {
             String firstPhotoPath = post.getPhoto().stream()
@@ -179,14 +179,14 @@ public class PostService {
         if (startPostId == 0) {
             postEntities = postRepository.findTop20ByOrderByUpdateDateDesc();
             if(postEntities.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         } else {
             Optional<PostEntity> startPost = postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
             postEntities = postRepository.findTop20ByUpdateDateBeforeOrderByUpdateDateDesc(startPost.get().getUpdateDate());
             if(postEntities.isEmpty())
-                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         }
         return postEntities.stream().map(post -> {
             String firstPhotoData = post.getPhoto().stream()
@@ -220,15 +220,15 @@ public class PostService {
         if(startPostId==0){
             postEntities = postRepository.findTop20ByCustomer_CustomerIdOrderByUpdateDateDesc(customerId);
             if(postEntities.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         } else{
             Optional<PostEntity> startPost = postRepository.findById(startPostId);
             if(startPost.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
             postEntities = postRepository.findNext20ByCustomer_CustomerIdAndUpdateDateBeforeOrderByUpdateDateDesc(
                         customerId, startPost.get().getUpdateDate());
             if(postEntities.isEmpty())
-                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+                throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         }
         return postEntities.stream().map(post -> {
             String firstPhotoPath = post.getPhoto().stream()
@@ -270,7 +270,7 @@ public class PostService {
                     foundPost.getType()
             );
         } catch (PostDoesNotExistException ex) {
-            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST, "Requested post does not exist", ex);
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         }
     }
     public PostRes updatePost(String token,PostUpdateReq postUpdateReq){
@@ -279,7 +279,7 @@ public class PostService {
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> postEntity=postRepository.findById(postUpdateReq.getPostId());
         if(postEntity.isEmpty())
-            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+            throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         if(postEntity.get().getCustomer().getCustomerId()!= customerId)
             throw new CustomerDoesNotMatchException();
         List<PhotoEntity> photos = Collections.emptyList();
@@ -319,13 +319,12 @@ public class PostService {
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<PostEntity> toDeletePost=postRepository.findById(postDeleteReq.getPostId());
         if(toDeletePost.isEmpty())
-            throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST.getMessage());
+            throw new  GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         PostEntity deletePost=toDeletePost.get();
         if(deletePost.getCustomer().getCustomerId()!= customerId)
-            throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH.getMessage());
+            throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH);
         postRepository.delete(deletePost);
     }
-
 
     public CommentRes giveComment(String token,CommentReq commentReq) throws IOException {
         if(!jwtUtil.validateToken(token))
@@ -370,8 +369,6 @@ public class PostService {
             throw new GeneralException(ErrorCode.FCMTOKEN_DOES_NOT_EXIST);
         return opFCMToken.get();
     }
-
-
     public List<CommentRes> getComments(Long postId){
         Optional<PostEntity> opPost=postRepository.findById(postId);
         if(opPost.isEmpty())
@@ -589,7 +586,7 @@ public class PostService {
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
         Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomer.isEmpty())
-            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST.getMessage());
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer = opCustomer.get();
 
         PostEntity post = PostEntity.builder()
