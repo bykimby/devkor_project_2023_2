@@ -28,7 +28,11 @@ public class CustomerController {
 
 
     @PostMapping("/fcmToken")
-    public void saveFCMToken(@RequestHeader Long customerId, @RequestBody String fcmToken) {
+    public void saveFCMToken(@RequestHeader("authorization") String authHeader, @RequestHeader String fcmToken) {
+        String token=authHeader.substring(7);
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
         customerService.saveFCMToken(customerId, fcmToken);
     }
     @PostMapping("/googleLogin")
