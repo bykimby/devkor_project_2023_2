@@ -36,12 +36,12 @@ public class DietController {
 
 
     @PostMapping("/fridge")
-    public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId, @RequestBody FridgeSimpleDto fridgeSimpleDto){
+    public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId){
         String token=authHeader.substring(7);
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
-        return HttpDataResponse.of(dietService.getFridgeSimpleDiet(customerId, babyId, fridgeSimpleDto));
+        return HttpDataResponse.of(dietService.getFridgeSimpleDiet(customerId, babyId));
     }
 
     //@PostMapping("/fridge/detail")

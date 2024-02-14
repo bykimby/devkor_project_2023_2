@@ -1,6 +1,9 @@
 package com.example.devkorproject.post.entity;
 
+import com.example.devkorproject.alarm.controller.AlarmController;
+import com.example.devkorproject.alarm.entity.AlarmEntity;
 import com.example.devkorproject.customer.entity.CustomerEntity;
+import com.example.devkorproject.diet.entity.SimpleDietEntity;
 import com.example.devkorproject.post.dto.CommentRes;
 
 import jakarta.persistence.*;
@@ -71,5 +74,10 @@ public class PostEntity {
                 ))
                 .collect(Collectors.toSet());
     }
+
+    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @Builder.Default
+    private List<AlarmEntity> alarmEntities = new ArrayList<AlarmEntity>();
+
 
 }

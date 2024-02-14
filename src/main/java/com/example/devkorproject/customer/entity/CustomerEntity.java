@@ -1,5 +1,6 @@
 package com.example.devkorproject.customer.entity;
 
+import com.example.devkorproject.alarm.entity.AlarmEntity;
 import com.example.devkorproject.baby.entity.BabyEntity;
 import com.example.devkorproject.diet.entity.SimpleDietEntity;
 import com.example.devkorproject.post.entity.PhotoEntity;
@@ -64,4 +65,9 @@ public class CustomerEntity {
     @OneToMany(mappedBy = "customer",orphanRemoval = true)
     @Builder.Default
     private List<SimpleDietEntity> simpleDiets = new ArrayList<SimpleDietEntity>();
+
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
+    private List<AlarmEntity> alarmEntities = new ArrayList<AlarmEntity>();
+
 }
