@@ -69,15 +69,26 @@ public class CustomerService {
         if (!encoder.matches(loginReq.getPassword(), customer.getPassword()))
             throw new GeneralException(ErrorCode.WRONG_PASSWORD);
         String accessToken= jwtUtil.createToken(customer.getCustomerId());
+        if((customer.getMyPosts()>=50)&&(customer.getMyComments()>=50)&&(customer.getMyLikes()>=50))
+            customer.setRank("주방장");
+        else if((customer.getMyPosts()>=10)&&(customer.getMyComments()>=10)&&(customer.getMyLikes()>=10))
+            customer.setRank("요리사");
+        else
+            customer.setRank("초보");
         return new LoginRes(accessToken);
     }
     public LoginRes googleLogin(GoogleLoginReq googleLoginReq){
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByEmail(googleLoginReq.getEmail());
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_NAME_DOES_NOT_EXIST);
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         CustomerEntity customer = opCustomer.get();
         String accessToken= jwtUtil.createToken(customer.getCustomerId());
+        if((customer.getMyPosts()>=50)&&(customer.getMyComments()>=50)&&(customer.getMyLikes()>=50))
+            customer.setRank("주방장");
+        else if((customer.getMyPosts()>=10)&&(customer.getMyComments()>=10)&&(customer.getMyLikes()>=10))
+            customer.setRank("요리사");
+        else
+            customer.setRank("초보");
         return new LoginRes(accessToken);
 
     }
@@ -98,6 +109,12 @@ public class CustomerService {
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
+        if((customer.getMyPosts()>=50)&&(customer.getMyComments()>=50)&&(customer.getMyLikes()>=50))
+            customer.setRank("주방장");
+        else if((customer.getMyPosts()>=10)&&(customer.getMyComments()>=10)&&(customer.getMyLikes()>=10))
+            customer.setRank("요리사");
+        else
+            customer.setRank("초보");
         return new GetMyPageRes(customer.getCustomerName(),customer.getRank(),customer.getMyLikes(),customer.getMyComments(),customer.getMyPosts());
     }
     public boolean validatePassword(Long customerId, ValidatePasswordReq validatePasswordReq){
@@ -128,6 +145,12 @@ public class CustomerService {
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
+        if((customer.getMyPosts()>=50)&&(customer.getMyComments()>=50)&&(customer.getMyLikes()>=50))
+            customer.setRank("주방장");
+        else if((customer.getMyPosts()>=10)&&(customer.getMyComments()>=10)&&(customer.getMyLikes()>=10))
+            customer.setRank("요리사");
+        else
+            customer.setRank("초보");
         return new ManageRes(customer.getCustomerName(), customer.getEmail(), customer.getRank());
     }
     public List<MyPostRes> getMyPosts(Long customerId){
