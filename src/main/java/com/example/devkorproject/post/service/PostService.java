@@ -502,9 +502,6 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-
-
-
     public LikesRes giveLikes(String token,LikesReq likesReq)throws IOException{
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
