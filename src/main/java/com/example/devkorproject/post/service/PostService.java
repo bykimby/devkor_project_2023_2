@@ -280,7 +280,8 @@ public class PostService {
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         }
     }
-    public PostRes updatePost(String token,PostUpdateReq postUpdateReq){
+    public PostRes updatePost(String token,PostUpdateReq postUpdateReq, List<MultipartFile> files) throws Exception{
+        System.out.println("들어옴");
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
@@ -289,12 +290,8 @@ public class PostService {
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         if(postEntity.get().getCustomer().getCustomerId()!= customerId)
             throw new CustomerDoesNotMatchException();
-        List<PhotoEntity> photos = Collections.emptyList();
-        for(String filePath:postUpdateReq.getFilePaths()){
-            PhotoEntity photo=new PhotoEntity();
-            photo.setFilePath(filePath);
-            photos.add(photo);
-        }
+
+        System.out.println("여기까지 옴1");
         PostEntity foundPost=postEntity.get();
         foundPost.setCustomer(postEntity.get().getCustomer());
         foundPost.setUpdateDate(LocalDateTime.now());
@@ -302,12 +299,90 @@ public class PostService {
         foundPost.setLikes(postUpdateReq.getLikes());
         foundPost.setTitle(postUpdateReq.getTitle());
         foundPost.setBody(postUpdateReq.getBody());
-        foundPost.setPhoto(photos);
         foundPost.setType(postUpdateReq.getType());
         foundPost.setScrap(postUpdateReq.getScrap());
-        List<String> photoPaths = foundPost.getPhoto().stream()
-                .map(PhotoEntity::getFilePath)
-                .collect(Collectors.toList());
+
+
+        //원래 포스트에 저장된 사진 중 사용자가 고른거
+        List<String> photoPaths = postUpdateReq.getFilePaths();
+
+        int check = 1;
+        for (MultipartFile image : files) {
+            if (image.isEmpty()) check = 0;
+        }
+
+        if(check == 1) {
+            List<PhotoEntity> fileList = new ArrayList<>();
+
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            String current_date = now.format(dateTimeFormatter);
+
+            String absolutePath = new File("").getAbsolutePath() + File.separator;
+
+            String path = "images" + File.separator + current_date;
+            File file = new File(path);
+
+            if(!file.exists()) {
+                boolean wasSuccessful = file.mkdirs();
+
+                if (!wasSuccessful) {
+                    System.out.println("file: was not successful");
+                }
+            }
+
+            for(MultipartFile multipartFile : files){
+
+                String originalFileExtension;
+                String contentType = multipartFile.getContentType();
+
+                if(ObjectUtils.isEmpty(contentType)){
+                    break;
+                } else {
+                    if (contentType.contains("image/jpeg")) {
+                        originalFileExtension = ".jpg";
+                    } else if (contentType.contains("image/png")) {
+                        originalFileExtension = ".png";
+                    } else {
+                        break;
+                    }
+                }
+
+                UUID uuid = UUID.randomUUID();
+                String newFileName = uuid + originalFileExtension;
+
+                PhotoEntity photo = PhotoEntity.builder()
+                        .origFileName(multipartFile.getOriginalFilename())
+                        .filePath(path + File.separator + newFileName)
+                        .fileSize(multipartFile.getSize())
+                        .build();
+
+                fileList.add(photo);
+
+                file = new File(absolutePath + path + File.separator + newFileName);
+                multipartFile.transferTo(file);
+
+                file.setWritable(true);
+                file.setReadable(true);
+
+            }
+
+            for(PhotoEntity photo : fileList){
+                photo.setPost(foundPost);
+                photoRepository.save(photo);
+                photoPaths.add(photo.getFilePath());
+            }
+
+        }
+
+
+        List<PhotoEntity> photoEntitiesToRemove = photoRepository.findByFilePathNotIn(photoPaths);
+        // photoEntitiesToRemove를 foundPost의 photo에서 제거
+        foundPost.getPhoto().removeAll(photoEntitiesToRemove);
+
+        // 변경된 foundPost를 저장
+        postRepository.save(foundPost);
+
         return new PostRes(
                 foundPost.getPostId(),
                 foundPost.getUpdateDate(),

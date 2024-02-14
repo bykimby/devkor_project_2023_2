@@ -27,11 +27,11 @@ public class PostController {
 //        return HttpDataResponse.of(postService.createPost(postReq));
 //    }
     @PostMapping("")
-    public HttpDataResponse<Long> createPhoto(@RequestHeader("Authorization") String authHeader,@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
+    public HttpDataResponse<Long> createPost(@RequestHeader("Authorization") String authHeader,@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "requestDto") PostCreateReqDto postCreateReqDto) throws Exception {
         String token=authHeader.substring(7);
         List<MultipartFile> photos = Collections.emptyList();
         if(files.isPresent()) photos = files.get();
-        return HttpDataResponse.of(postService.create(token,postCreateReqDto, photos));
+        return HttpDataResponse.of(postService.create(token, postCreateReqDto, photos));
     }
     @PostMapping("/comment")
 
@@ -85,9 +85,11 @@ public class PostController {
     }
 
     @PutMapping("")
-    public HttpDataResponse<PostRes> updatePost(@RequestHeader("Authorization") String authHeader,@RequestBody PostUpdateReq postUpdateReq){
+    public HttpDataResponse<PostRes> updatePost(@RequestHeader("Authorization") String authHeader,@RequestPart(value="image", required = false) Optional<List<MultipartFile>> files, @RequestPart(value = "postUpdateReq") PostUpdateReq postUpdateReq) throws Exception{
         String token=authHeader.substring(7);
-        return HttpDataResponse.of(postService.updatePost(token,postUpdateReq));
+        List<MultipartFile> photos = Collections.emptyList();
+        if(files.isPresent()) photos = files.get();
+        return HttpDataResponse.of(postService.updatePost(token,postUpdateReq,photos));
     }
     @DeleteMapping("")
     public void deletePost(@RequestHeader("Authorization") String authHeader,@RequestBody PostDeleteReq postDeleteReq){

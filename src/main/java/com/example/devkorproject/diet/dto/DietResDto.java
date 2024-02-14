@@ -16,4 +16,5 @@ public class DietResDto {
     private String recipe;
     private Long time;
     private String difficulty;
+    private boolean heart;
 }
