@@ -358,7 +358,7 @@ public class DietService {
 
 
         DietResDto dietResDto = new DietResDto(simpleDiet.getDietName(), simpleDiet.getDescription(),
-                ingredients, recipe, simpleDiet.getTime(), simpleDiet.getDifficulty());
+                ingredients, recipe, simpleDiet.getTime(), simpleDiet.getDifficulty(), simpleDiet.isHeart());
 
         return dietResDto;
     }
@@ -485,7 +485,8 @@ public class DietService {
                     simpleDiet.getDiet().getIngredients(),
                     simpleDiet.getDiet().getRecipe(),
                     simpleDiet.getTime(),
-                    simpleDiet.getDifficulty()
+                    simpleDiet.getDifficulty(),
+                    simpleDiet.isHeart()
             );
         }
 
@@ -535,6 +536,6 @@ public class DietService {
 
 
         return new DietResDto(simpleDiet.getDietName(), simpleDiet.getDescription(),
-                ingredients, recipe, simpleDiet.getTime(), simpleDiet.getDifficulty());
+                ingredients, recipe, simpleDiet.getTime(), simpleDiet.getDifficulty(), simpleDiet.isHeart());
     }
 }
