@@ -79,7 +79,7 @@ public class PostController {
         return HttpDataResponse.of(postService.getComments(postId));
     }
     @GetMapping("/scrap")
-    public HttpDataResponse<List<GetPostRes>> getScrap(@RequestHeader("Authorization") String authHeader, String type){
+    public HttpDataResponse<List<GetPostRes>> getScrap(@RequestHeader("Authorization") String authHeader, @RequestParam String type){
         String token=authHeader.substring(7);
         return HttpDataResponse.of(postService.getScrap(token,type));
     }
