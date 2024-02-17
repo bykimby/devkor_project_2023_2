@@ -176,7 +176,7 @@ public class CustomerService {
             throw new GeneralException(ErrorCode.COMMENT_DOES_NOT_EXIST);
         return comments.stream()
                 .map(comment->
-                        new MyCommentRes(comment.getPost().getPostId(),comment.getCommentId(), comment.getPost().getTitle(),comment.getTime())
+                        new MyCommentRes(comment.getPost().getPostId(),comment.getCommentId(), comment.getPost().getTitle(),comment.getContents(),comment.getTime())
                 ).collect(Collectors.toList());
     }
     public boolean withdraw(Long customerId){

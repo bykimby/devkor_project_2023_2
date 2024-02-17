@@ -11,6 +11,7 @@ public class MyCommentRes {
     private Long postId;
     private Long commentId;
     private String title;
+    private String contents;
     private LocalDateTime time;
 
 }
