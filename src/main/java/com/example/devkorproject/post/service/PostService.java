@@ -39,9 +39,7 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final ScrapRepository scrapRepository;
     private final LikeRepository likeRepository;
-
     private final PhotoRepository photoRepository;
-
     private final AlarmRepository alarmRepository;
 
     private final JwtUtil jwtUtil;
@@ -289,11 +287,11 @@ public class PostService {
         if(postEntity.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         if(postEntity.get().getCustomer().getCustomerId()!= customerId)
-            throw new CustomerDoesNotMatchException();
+            throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH);
 
         System.out.println("여기까지 옴1");
         PostEntity foundPost=postEntity.get();
-        foundPost.setCustomer(postEntity.get().getCustomer());
+        //foundPost.setCustomer(postEntity.get().getCustomer());
         foundPost.setUpdateDate(LocalDateTime.now());
         foundPost.setComments(postUpdateReq.getComments());
         foundPost.setLikes(postUpdateReq.getLikes());
@@ -395,7 +393,7 @@ public class PostService {
                 foundPost.getType()
         );
     }
-    public void deletePost(String token,PostDeleteReq postDeleteReq){
+    public Boolean deletePost(String token,PostDeleteReq postDeleteReq){
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
         Long customerId= jwtUtil.getCustomerIdFromToken(token);
@@ -406,8 +404,12 @@ public class PostService {
         if(deletePost.getCustomer().getCustomerId()!= customerId)
             throw new  GeneralException(ErrorCode.CUSTOMER_DOES_NOT_MATCH);
         postRepository.delete(deletePost);
+        Optional<PostEntity> checkDelete=postRepository.findById(postDeleteReq.getPostId());
+        if(checkDelete.isEmpty())
+            return true;
+        else
+            return false;
     }
-
     public CommentRes giveComment(String token,CommentReq commentReq) throws IOException {
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
@@ -456,7 +458,6 @@ public class PostService {
 
         return new CommentRes(comment.getPost().getPostId(),comment.getContents(),comment.getCustomer().getCustomerName(),comment.getTime());
     }
-
     public String searchFCMTokenByPostId(Long postId){
         Optional<String> opFCMToken = postRepository.findCustomerFcmTokenByPostId(postId);
         if(opFCMToken.isEmpty())
@@ -468,7 +469,12 @@ public class PostService {
         if(opPost.isEmpty())
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
         PostEntity postEntity=opPost.get();
-        return postEntity.getCommentEntitiesResponses().stream().toList();
+        List<CommentEntity> comments = postEntity.getCommentEntities();
+        return comments.stream()
+                .map(commentEntity -> {
+                    return new CommentRes(commentEntity.getPost().getPostId(),commentEntity.getContents(),commentEntity.getCustomer().getCustomerName(),commentEntity.getTime());
+                })
+                .collect(Collectors.toList());
     }
     public List<GetPostRes> weeklyLiked(){
         List<PostEntity> postEntities=postRepository.findTop10ByLikesWithinLastWeek();
@@ -680,7 +686,6 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-
     public Long create(String token,PostCreateReqDto requestDto, List<MultipartFile> files) throws Exception{
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);

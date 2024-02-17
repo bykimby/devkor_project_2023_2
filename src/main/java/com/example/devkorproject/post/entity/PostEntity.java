@@ -49,9 +49,16 @@ public class PostEntity {
 
     @Column(name = "type", nullable = false)
     private String type;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "post",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<LikeEntity> likeEntities=new ArrayList<>();
     @Builder.Default
     @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
-    private Set<CommentEntity> commentEntities=new HashSet<>();
+    private List<CommentEntity> commentEntities=new ArrayList<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "post",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<ScrapEntity> scrapEntities=new ArrayList<>();
 
 //    @OneToMany(mappedBy="post",cascade = CascadeType.REMOVE,orphanRemoval = true)
 //    private Set<PhotoEntity> photos;
@@ -64,16 +71,6 @@ public class PostEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customerId")
     private CustomerEntity customer;
-    public Set<CommentRes> getCommentEntitiesResponses() {
-        return this.commentEntities.stream()
-                .map(commentEntity -> new CommentRes(
-                        this.getPostId(), // 포스트 ID
-                        commentEntity.getContents(), // 댓글 내용
-                        commentEntity.getCustomer().getCustomerName(), // 작성자 이름
-                        commentEntity.getTime()
-                ))
-                .collect(Collectors.toSet());
-    }
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     @Builder.Default

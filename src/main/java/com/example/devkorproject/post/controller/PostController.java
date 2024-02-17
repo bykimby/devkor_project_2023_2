@@ -34,7 +34,6 @@ public class PostController {
         return HttpDataResponse.of(postService.create(token, postCreateReqDto, photos));
     }
     @PostMapping("/comment")
-
     public HttpDataResponse<CommentRes> giveComment(@RequestHeader("Authorization") String authHeader,@RequestBody CommentReq commentReq) throws IOException {
         String token=authHeader.substring(7);
         return HttpDataResponse.of(postService.giveComment(token,commentReq));
@@ -92,9 +91,9 @@ public class PostController {
         return HttpDataResponse.of(postService.updatePost(token,postUpdateReq,photos));
     }
     @DeleteMapping("")
-    public void deletePost(@RequestHeader("Authorization") String authHeader,@RequestBody PostDeleteReq postDeleteReq){
+    public HttpDataResponse<Boolean> deletePost(@RequestHeader("Authorization") String authHeader,@RequestBody PostDeleteReq postDeleteReq){
         String token=authHeader.substring(7);
-        postService.deletePost(token,postDeleteReq);
+        return HttpDataResponse.of(postService.deletePost(token,postDeleteReq));
     }
 
     @GetMapping("/weekly")//주간 인기글

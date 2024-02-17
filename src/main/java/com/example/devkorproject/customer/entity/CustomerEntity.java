@@ -3,8 +3,7 @@ package com.example.devkorproject.customer.entity;
 import com.example.devkorproject.alarm.entity.AlarmEntity;
 import com.example.devkorproject.baby.entity.BabyEntity;
 import com.example.devkorproject.diet.entity.SimpleDietEntity;
-import com.example.devkorproject.post.entity.PhotoEntity;
-import com.example.devkorproject.post.entity.PostEntity;
+import com.example.devkorproject.post.entity.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -70,4 +69,13 @@ public class CustomerEntity {
     @Builder.Default
     private List<AlarmEntity> alarmEntities = new ArrayList<AlarmEntity>();
 
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
+    private List<LikeEntity> likeEntities=new ArrayList<>();
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
+    private List<CommentEntity> commentEntities=new ArrayList<>();
+    @OneToMany(mappedBy = "customer",orphanRemoval = true)
+    @Builder.Default
+    private List<ScrapEntity> scrapEntities=new ArrayList<>();
 }
