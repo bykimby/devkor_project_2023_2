@@ -8,6 +8,7 @@ import com.example.devkorproject.common.dto.HttpDataResponse;
 import com.example.devkorproject.diet.service.DietService;
 import lombok.*;
 
+import org.json.JSONException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class DietController {
     private final DietService dietService;
     private final JwtUtil jwtUtil;
     @PostMapping("/simple")
-    public HttpDataResponse<SimpleResDto[]> askQuestion(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId ,@RequestBody SimpleReqDto simpleRequestDto){
+    public HttpDataResponse<SimpleResDto[]> askQuestion(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId ,@RequestBody SimpleReqDto simpleRequestDto) throws JSONException {
         String token=authHeader.substring(7);
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
@@ -30,13 +31,13 @@ public class DietController {
     }
 
     @PostMapping("/detail")
-    public HttpDataResponse<DietResDto> getDetailDiet(@RequestHeader("authorization") String token,@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
+    public HttpDataResponse<DietResDto> getDetailDiet(@RequestHeader("authorization") String token,@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto) throws JSONException {
         return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, detailReqDto));
     }
 
 
     @PostMapping("/fridge")
-    public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId){
+    public HttpDataResponse<List<FridgeSimpleDietResDto>> getFridgeSimpleDiet(@RequestHeader("Authorization") String authHeader, @RequestParam Long babyId) throws JSONException {
         String token=authHeader.substring(7);
         if(!jwtUtil.validateToken(token))
             throw new GeneralException(ErrorCode.WRONG_TOKEN);
@@ -74,7 +75,7 @@ public class DietController {
     }
 
     @GetMapping("/heart/view")
-    public HttpDataResponse<DietResDto> getHeartDietView(@RequestHeader("authorization") String authHeader,@RequestParam Long simpleDietId){
+    public HttpDataResponse<DietResDto> getHeartDietView(@RequestHeader("authorization") String authHeader,@RequestParam Long simpleDietId) throws JSONException {
         return HttpDataResponse.of(dietService.getHeartDietView(simpleDietId));
     }
 

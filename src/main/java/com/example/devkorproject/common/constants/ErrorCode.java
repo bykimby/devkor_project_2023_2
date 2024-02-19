@@ -33,7 +33,8 @@ public enum ErrorCode {
     BLANK_PASSWORD(10001,HttpStatus.BAD_REQUEST,"Password cannot be empty"),
     WRONG_PASSWORD(10001,HttpStatus.BAD_REQUEST,"Password is wrong"),
     WRONG_TOKEN(10001,HttpStatus.BAD_REQUEST,"Token is wrong"),
-    COMMENT_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Comment does not exist")
+    COMMENT_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Comment does not exist"),
+    SIMPLE_DIET_HEART_FALSE(10001,HttpStatus.BAD_REQUEST,"This simple diet is not hearted.")
     ;
     private final Integer code;
     private final HttpStatus httpStatus;
