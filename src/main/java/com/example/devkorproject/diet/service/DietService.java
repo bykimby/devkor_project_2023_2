@@ -353,7 +353,63 @@ public class DietService {
         return dietResDto;
     }
 
+    public DietResDto getFridgeDetailDiet(Long simpleDietId) throws JSONException {
 
+        Optional<SimpleDietEntity> optionalSimpleDiet = simpleDietRepository.findBySimpleDietId(simpleDietId);
+        if(optionalSimpleDiet.isEmpty())
+            throw new SimpleDietDoesNotExistException();
+        SimpleDietEntity simpleDiet = optionalSimpleDiet.get();
+
+        List<ChatGptMessage> messages = new ArrayList<>();
+        String question = simpleDiet.getDietName()
+                + "에 대해 다음의 json형식으로 답해줘. 레시피는 단계별로 줄바꿈해줘."
+                + "{‘ingredients’:’’,’recipe’:’’}";
+
+        messages.add(ChatGptMessage.builder()
+                .role(ChatGptConfig.ROLE)
+                .content(question)
+                .build());
+
+        String message =  this.getResponse(
+                this.buildHttpEntity(
+                        new GptReqDto(
+                                ChatGptConfig.CHAT_MODEL,
+                                ChatGptConfig.MAX_TOKEN,
+                                ChatGptConfig.TEMPERATURE,
+                                ChatGptConfig.STREAM,
+                                messages
+                        )
+                )
+        ).getChoices().get(0).getMessage().getContent();
+        System.out.println(message);
+
+        JSONObject jsonObject = new JSONObject(message);
+
+        // ingredients와 recipe 추출
+        String ingredients = jsonObject.getString("ingredients");
+        String recipe = jsonObject.getString("recipe");
+
+//        현재 날짜 구하기
+        LocalDateTime now = LocalDateTime.now();
+//        String imageUrl = "image";
+
+        DietEntity dietEntity = DietEntity.builder()
+                .ingredients(ingredients)
+                .recipe(recipe)
+                .allergy(simpleDiet.getBaby().getAllergy())
+                .needs(simpleDiet.getBaby().getNeeds())
+                .date(now)
+                .build();
+        dietRepository.save(dietEntity);
+        simpleDiet.setDiet(dietEntity);
+
+
+
+        DietResDto dietResDto = new DietResDto(simpleDiet.getDietName(), simpleDiet.getDescription(),
+                ingredients, recipe, simpleDiet.getTime(), simpleDiet.getDifficulty(), simpleDiet.isHeart());
+
+        return dietResDto;
+    }
 //    public DietResDto getFridgeDetailDiet(Long simpleDietId, String type){
 //
 //        Optional<SimpleDietEntity> optionalSimpleDiet = simpleDietRepository.findBySimpleDietId(simpleDietId);

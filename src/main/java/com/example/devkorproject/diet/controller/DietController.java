@@ -45,6 +45,11 @@ public class DietController {
         return HttpDataResponse.of(dietService.getFridgeSimpleDiet(customerId, babyId));
     }
 
+    @PostMapping("fridge/detail")
+    public HttpDataResponse<DietResDto> getFridgeDetailDiet(@RequestHeader("authorization") String token,@RequestParam Long simpleDietId) throws JSONException {
+        return HttpDataResponse.of(dietService.getFridgeDetailDiet(simpleDietId));
+    }
+
     //@PostMapping("/fridge/detail")
     //public HttpDataResponse<DietResDto> getFridgeDiet(@RequestParam Long simpleDietId, @RequestBody DetailReqDto detailReqDto){
       //  return HttpDataResponse.of(dietService.getDetailDiet(simpleDietId, detailReqDto));
