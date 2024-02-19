@@ -434,25 +434,26 @@ public class PostService {
         post.setComments(post.getComments()+1);
         post.getCommentEntities().add(comment);
         postRepository.save(post);
+        if(customer.getFcmToken() != null) {
+            if (customerId != post.getCustomer().getCustomerId()) {
+                String targetToken = searchFCMTokenByPostId(commentReq.getPostId());
+                String postTitle = post.getTitle();
+                String customerName = customer.getCustomerName();
 
-        if(customerId != post.getCustomer().getCustomerId()) {
-            String targetToken = searchFCMTokenByPostId(commentReq.getPostId());
-            String postTitle = post.getTitle();
-            String customerName = customer.getCustomerName();
+                String message = customerName + "님이 " +
+                        postTitle + " 글에 댓글을 달았습니다.";
 
-            String message = customerName + "님이 " +
-                    postTitle + " 글에 댓글을 달았습니다.";
+                alarmService.sendMessageTo(targetToken, "BabyMeal", message);
+                LocalDateTime now = LocalDateTime.now();
+                now.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
 
-            alarmService.sendMessageTo(targetToken, "BabyMeal", message);
-            LocalDateTime now = LocalDateTime.now();
-            now.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-
-            AlarmEntity alarmEntity = AlarmEntity.builder()
-                    .body(message)
-                    .date(now)
-                    .customer(post.getCustomer())
-                    .build();
-            alarmRepository.save(alarmEntity);
+                AlarmEntity alarmEntity = AlarmEntity.builder()
+                        .body(message)
+                        .date(now)
+                        .customer(post.getCustomer())
+                        .build();
+                alarmRepository.save(alarmEntity);
+            }
         }
 
 
@@ -611,25 +612,27 @@ public class PostService {
         getCustomer.setMyLikes(getCustomer.getMyLikes()+1);
 
         customer.setMyLikes(customer.getMyLikes()+1);
-        if(customerId != post.getCustomer().getCustomerId()) {
-            String targetToken = searchFCMTokenByPostId(likesReq.getPostId());
-            String postTitle = post.getTitle();
-            String customerName = customer.getCustomerName();
+        if(customer.getFcmToken() != null) {
+            if (customerId != post.getCustomer().getCustomerId()) {
+                String targetToken = searchFCMTokenByPostId(likesReq.getPostId());
+                String postTitle = post.getTitle();
+                String customerName = customer.getCustomerName();
 
-            String message = customerName + "님이 " +
-                    postTitle + " 글에 찜을 눌렀습니다.";
+                String message = customerName + "님이 " +
+                        postTitle + " 글에 찜을 눌렀습니다.";
 
-            alarmService.sendMessageTo(targetToken, "BabyMeal", message);
+                alarmService.sendMessageTo(targetToken, "BabyMeal", message);
 
-            LocalDateTime now = LocalDateTime.now();
-            now.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+                LocalDateTime now = LocalDateTime.now();
+                now.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
 
-            AlarmEntity alarmEntity = AlarmEntity.builder()
-                    .body(message)
-                    .date(now)
-                    .customer(post.getCustomer())
-                    .build();
-            alarmRepository.save(alarmEntity);
+                AlarmEntity alarmEntity = AlarmEntity.builder()
+                        .body(message)
+                        .date(now)
+                        .customer(post.getCustomer())
+                        .build();
+                alarmRepository.save(alarmEntity);
+            }
         }
 
 
