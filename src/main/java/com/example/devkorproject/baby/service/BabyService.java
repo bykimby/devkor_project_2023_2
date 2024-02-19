@@ -80,6 +80,7 @@ public class BabyService {
         babyEntity.setBirth(babyBirth);
         babyEntity.setAllergy(babyModifyReqDto.getAllergy());
         babyEntity.setNeeds(babyModifyReqDto.getNeeds());
+        babyRepository.save(babyEntity);
         BabyModifyResDto babyModifyResDto=new BabyModifyResDto(babyEntity.getBabyName(), babyModifyReqDto.getBirth(), babyEntity.getAllergy(), babyModifyReqDto.getNeeds());
         return babyModifyResDto;
     }
