@@ -13,11 +13,14 @@ import com.example.devkorproject.diet.dto.*;
 import com.example.devkorproject.diet.entity.SimpleDietEntity;
 import com.example.devkorproject.diet.exception.DietDoesNotExistException;
 import com.example.devkorproject.diet.exception.SimpleDietDoesNotExistException;
+import com.example.devkorproject.diet.exception.SimpleDietHeartFalseException;
 import com.example.devkorproject.diet.repository.DietRepository;
 import com.example.devkorproject.diet.repository.SimpleDietRepository;
 import com.example.devkorproject.fridge.entity.FridgeEntity;
 import com.example.devkorproject.fridge.repository.FridgeRepository;
 import com.example.devkorproject.post.exception.CustomerDoesNotMatchException;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +29,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.json.JSONObject;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -72,7 +77,7 @@ public class DietService {
         return responseEntity.getBody();
     }
 
-    public  SimpleResDto[] askQuestion(Long customerId, Long babyId, SimpleReqDto simpleRequestDto) {
+    public  SimpleResDto[] askQuestion(Long customerId, Long babyId, SimpleReqDto simpleRequestDto) throws JSONException {
 
         Optional<CustomerEntity> opCustomerEntity = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomerEntity.isEmpty())
@@ -110,10 +115,8 @@ public class DietService {
                 keywordMessage +
                 allergyMessage +
                 type +
-                "의 (메뉴명: 숫자없이),(간단한 소개:),(소요시간(분):),(난이도:)를 한 줄씩 알려줘. " +
-                "시간은 단위 떼고 숫자만 알려줘. " +
-                "난이도는 간단/보통/복잡 중 하나로 선택해줘. " +
-                "똑같은 방법으로 세 가지 메뉴 알려줘.";
+                "를 다음의 json 형식으로 세 가지 추천해줘. " +
+                "{“dietName”:””,“description”:””,“time”:”분 단위, 숫자만”,“difficulty”:”간단/보통/복잡 중 하나”}";
 
         System.out.println(question);
         messages.add(ChatGptMessage.builder()
@@ -134,33 +137,31 @@ public class DietService {
         ).getChoices().get(0).getMessage().getContent();
         System.out.println(message);
 
-        SimpleResDto[] simples = new SimpleResDto[3];
+        JSONArray jsonArray = new JSONArray(message);
 
-        String[] tempArr = message.split("\n\n");
-        for(int i = 0; i < 3; i++){
-            String[] simple = tempArr[i].split("\n");
-            for(int j = 0; j < simple.length; j++){
-                String[] split = simple[j].split(": ");
-                simple[j] = split[split.length - 1];
-            }
-            System.out.println(simple[0]);
-            System.out.println(simple[1]);
-            System.out.println(simple[2]);
-            System.out.println(simple[3]);
+        // 각 메뉴 정보 저장할 리스트 생성
+        List<SimpleResDto> menuList = new ArrayList<>();
+
+        // 각 객체에서 dietName, description, time, difficulty 추출하여 Menu 객체로 저장
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject menuJson = jsonArray.getJSONObject(i);
+
+            String dietName = menuJson.getString("dietName");
+            String description = menuJson.getString("description");
+            String time = menuJson.getString("time");
+            String difficulty = menuJson.getString("difficulty");
 
             SimpleDietEntity simpleDietEntity = SimpleDietEntity.builder()
-                    .dietName(simple[0])
-                    .description(simple[1])
-                    .time(Long.parseLong(simple[2]))
-                    .difficulty(simple[3])
+                    .dietName(dietName)
+                    .description(description)
+                    .time(Long.parseLong(time))
+                    .difficulty(difficulty)
                     .type(type)
                     .heart(false)
                     .customer(customerEntity)
                     .baby(babyEntity)
                     .build();
             simpleDietRepository.save(simpleDietEntity);
-            System.out.println(1);
-
             SimpleResDto simpleResDto = new SimpleResDto(
                     simpleDietEntity.getSimpleDietId(),
                     simpleDietEntity.getDietName(),
@@ -169,18 +170,13 @@ public class DietService {
                     simpleDietEntity.getDifficulty(),
                     simpleDietEntity.isHeart()
             );
-            System.out.println(2);
-
-            simples[i] = simpleResDto;
-            System.out.println(3);
-
+            menuList.add(simpleResDto);
         }
 
-
-        return simples;
+        return menuList.toArray(new SimpleResDto[0]);
     }
 
-    public List<FridgeSimpleDietResDto> getFridgeSimpleDiet(Long customerId, Long babyId){
+    public List<FridgeSimpleDietResDto> getFridgeSimpleDiet(Long customerId, Long babyId) throws JSONException {
         Optional<CustomerEntity> opCustomerEntity = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomerEntity.isEmpty())
             throw new CustomerDoesNotExistException();
@@ -209,16 +205,9 @@ public class DietService {
         List<ChatGptMessage> messages = new ArrayList<>();
         String question = ingredients + "를 활용한 " +
                 allergyMessage +
-                "음식의 (메뉴명: 숫자없이),(간단한 소개:),(소요시간(분):),(난이도:)를 한 줄씩 알려줘. " +
-                "시간은 단위 떼고 숫자만 알려줘. " +
-                "난이도는 간단/보통/복잡 중 하나로 선택해줘. " +
-                "똑같은 방법으로 두 가지 메뉴 알려줘.";
+                "음식을 다음의 json 형식으로 두 가지 추천해줘. " +
+                "{“dietName”:””,“description”:””,“time”:”분 단위, 숫자만”,“difficulty”:”간단/보통/복잡 중 하나”}";
         System.out.println(question);
-//        String question = ingredients +
-//                "가 활용되는 음식을 (메뉴명:),(소요시간(분):),(난이도:) 형태로 한 줄씩 알려줘. " +
-//                "시간은 단위 떼고 숫자만 알려줘. " +
-//                "난이도는 간단/보통/복잡 중 하나로 선택해줘. " +
-//                "똑같은 방법으로 두 가지 메뉴 알려줘.";
 
         messages.add(ChatGptMessage.builder()
                 .role(ChatGptConfig.ROLE)
@@ -237,28 +226,29 @@ public class DietService {
                 )
         ).getChoices().get(0).getMessage().getContent();
         System.out.println(message);
-        FridgeSimpleDietResDto[] simples = new FridgeSimpleDietResDto[2];
 
-        String[] tempArr = message.split("\n\n");
-        for(int i = 0; i < 2; i++){
-            String[] simple = tempArr[i].split("\n");
-            for(int j = 0; j < simple.length; j++){
-                String[] split = simple[j].split(": ");
-                simple[j] = split[split.length - 1];
-            }
+        JSONArray jsonArray = new JSONArray(message);
+        // 각 메뉴 정보 저장할 리스트 생성
+        List<FridgeSimpleDietResDto> menuList = new ArrayList<>();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject menuJson = jsonArray.getJSONObject(i);
+
+            String dietName = menuJson.getString("dietName");
+            String description = menuJson.getString("description");
+            String time = menuJson.getString("time");
+            String difficulty = menuJson.getString("difficulty");
 
             SimpleDietEntity simpleDietEntity = SimpleDietEntity.builder()
-                    .dietName(simple[0])
-                    .description(simple[1])
-                    .time(Long.parseLong(simple[2]))
-                    .difficulty(simple[3])
+                    .dietName(dietName)
+                    .description(description)
+                    .time(Long.parseLong(time))
+                    .difficulty(difficulty)
                     .heart(false)
                     .customer(customerEntity)
                     .baby(babyEntity)
                     .build();
-
             simpleDietRepository.save(simpleDietEntity);
-            System.out.println(1);
 
             FridgeSimpleDietResDto fridgeSimpleDietResDto = new FridgeSimpleDietResDto(
                     simpleDietEntity.getSimpleDietId(),
@@ -267,11 +257,11 @@ public class DietService {
                     simpleDietEntity.getDifficulty(),
                     simpleDietEntity.isHeart()
             );
-
-            simples[i] = fridgeSimpleDietResDto;
+            menuList.add(fridgeSimpleDietResDto);
         }
 
-        return Arrays.asList(simples);
+
+        return menuList;
 
 //        String[] tempArr = message.split("\n\n");
 //
@@ -302,7 +292,7 @@ public class DietService {
     }
 
 
-    public DietResDto getDetailDiet(Long simpleDietId,DetailReqDto detailReqDto){
+    public DietResDto getDetailDiet(Long simpleDietId,DetailReqDto detailReqDto) throws JSONException {
 
         Optional<SimpleDietEntity> optionalSimpleDiet = simpleDietRepository.findBySimpleDietId(simpleDietId);
         if(optionalSimpleDiet.isEmpty())
@@ -310,9 +300,9 @@ public class DietService {
         SimpleDietEntity simpleDiet = optionalSimpleDiet.get();
 
         List<ChatGptMessage> messages = new ArrayList<>();
-        String question = simpleDiet.getDietName() + "의 재료와 레시피를 (재료:) 한 줄, (레시피:) 한 줄씩 구분해서 알려줘. " +
-                "재료는 그람수 단위로 자세하게 한줄로 알려주고, " +
-                "레시피는 단계별로 나눠서 자세하게 한줄로 알려줘.";
+        String question = simpleDiet.getDietName()
+                + "에 대해 다음의 json형식으로 답해줘. 레시피는 단계별로 줄바꿈해줘."
+                + "{‘ingredients’:’’,’recipe’:’’}";
 
         messages.add(ChatGptMessage.builder()
                 .role(ChatGptConfig.ROLE)
@@ -332,12 +322,12 @@ public class DietService {
         ).getChoices().get(0).getMessage().getContent();
         System.out.println(message);
 
+        JSONObject jsonObject = new JSONObject(message);
 
-        String[] tempArr = message.split("\n\n");
-        String ingredients = tempArr[0].split(": ")[1];
-        String recipe = tempArr[1].split(":\n")[1];
-        System.out.println(ingredients);
-        System.out.println(recipe);
+        // ingredients와 recipe 추출
+        String ingredients = jsonObject.getString("ingredients");
+        String recipe = jsonObject.getString("recipe");
+
 //        현재 날짜 구하기
         LocalDateTime now = LocalDateTime.now();
 //        String imageUrl = "image";
@@ -472,11 +462,15 @@ public class DietService {
         }).collect(Collectors.toList());
     }
 
-    public DietResDto getHeartDietView(Long simpleDietId){
+    public DietResDto getHeartDietView(Long simpleDietId) throws JSONException {
         Optional<SimpleDietEntity> optionalSimpleDiet = simpleDietRepository.findBySimpleDietId(simpleDietId);
         if(optionalSimpleDiet.isEmpty())
             throw new SimpleDietDoesNotExistException();
         SimpleDietEntity simpleDiet = optionalSimpleDiet.get();
+
+        if(!simpleDiet.isHeart()){
+            throw new SimpleDietHeartFalseException();
+        }
 
         if(simpleDiet.getDiet() != null) {
             return new DietResDto(
@@ -491,9 +485,9 @@ public class DietService {
         }
 
         List<ChatGptMessage> messages = new ArrayList<>();
-        String question = simpleDiet.getDietName() + "의 재료와 레시피를 (재료:) 한 줄, (레시피:) 한 줄씩 구분해서 알려줘. " +
-                "재료는 그람수 단위로 자세하게 한줄로 알려주고, " +
-                "레시피는 단계별로 나눠서 자세하게 한줄로 알려줘.";
+        String question = simpleDiet.getDietName()
+                + "에 대해 다음의 json형식으로 답해줘. 레시피는 단계별로 줄바꿈해줘."
+                + "{‘ingredients’:’’,’recipe’:’’}";
 
         messages.add(ChatGptMessage.builder()
                 .role(ChatGptConfig.ROLE)
@@ -514,11 +508,11 @@ public class DietService {
         System.out.println(message);
 
 
-        String[] tempArr = message.split("\n\n");
-        String ingredients = tempArr[0].split(": ")[1];
-        String recipe = tempArr[1].split(":\n")[1];
-        System.out.println(ingredients);
-        System.out.println(recipe);
+        JSONObject jsonObject = new JSONObject(message);
+
+        // ingredients와 recipe 추출
+        String ingredients = jsonObject.getString("ingredients");
+        String recipe = jsonObject.getString("recipe");
 //        현재 날짜 구하기
         LocalDateTime now = LocalDateTime.now();
 //        String imageUrl = "image";
