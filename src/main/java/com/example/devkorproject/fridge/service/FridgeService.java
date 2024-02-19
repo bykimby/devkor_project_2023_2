@@ -52,7 +52,8 @@ public class FridgeService {
             throw new GeneralException(ErrorCode.FRIDGE_DOES_NOT_EXIST.getMessage());
         return fridgeEntities.stream().map(fridge -> new FridgeResDto(
                 fridge.getFrigeId(),
-                fridge.getIngredients()
+                fridge.getIngredients(),
+                fridge.getEmoticon()
         )).collect(Collectors.toList());
     }
     public List<FridgeResDto> saveCustomerOrder(String token,CustomerSortReq customerSortReq){
@@ -74,7 +75,7 @@ public class FridgeService {
                     Integer order = orderMap.get(fridgeId);
                     fridge.setCustomerOrder(order.longValue());
                     fridgeRepository.save(fridge);
-                    fridgeResDtoList.add(new FridgeResDto(fridgeId, fridge.getIngredients()));
+                    fridgeResDtoList.add(new FridgeResDto(fridgeId, fridge.getIngredients(), fridge.getEmoticon()));
                     break;
                 }
             }
@@ -91,7 +92,8 @@ public class FridgeService {
         Comparator<FridgeEntity> byDate = Comparator.comparing(FridgeEntity::getDate).reversed();
         return fridgeEntities.stream().sorted(byDate).map(fridge -> new FridgeResDto(
                     fridge.getFrigeId(),
-                    fridge.getIngredients()
+                    fridge.getIngredients(),
+                    fridge.getEmoticon()
             )).collect(Collectors.toList());
     }
     public List<FridgeResDto> getCustomerFridgeOld(String token){
@@ -104,7 +106,8 @@ public class FridgeService {
         Comparator<FridgeEntity> byDate = Comparator.comparing(FridgeEntity::getDate);
         return fridgeEntities.stream().sorted(byDate).map(fridge -> new FridgeResDto(
                     fridge.getFrigeId(),
-                    fridge.getIngredients()
+                    fridge.getIngredients(),
+                    fridge.getEmoticon()
         )).collect(Collectors.toList());
     }
     public FridgeResFull updateFridge(String token,FridgeUpReq fridgeUpReq){

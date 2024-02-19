@@ -24,13 +24,11 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CommentRepository commentRepository;
     private final JwtUtil jwtUtil;
-
     public CustomerService(CustomerRepository customerRepository, CommentRepository commentRepository, JwtUtil jwtUtil) {
         this.customerRepository = customerRepository;
         this.commentRepository = commentRepository;
         this.jwtUtil = jwtUtil;
     }
-
     public CustomerEntity searchByMemberId(Long customerId) {
         Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomer.isEmpty())
@@ -38,8 +36,6 @@ public class CustomerService {
         CustomerEntity customer = opCustomer.get();
         return customer;
     }
-
-
     public void saveFCMToken(Long customerId, String fcmToken){
         Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
         if(opCustomer.isEmpty())
@@ -47,7 +43,6 @@ public class CustomerService {
         CustomerEntity customer = opCustomer.get();
         customer.setFcmToken(fcmToken);
     }
-
     public String searchFCMTokenByCustomerId(Long customerId) {
         Optional<CustomerEntity> opCustomer = customerRepository.findCustomerEntityByCustomerId(customerId);
         if (opCustomer.isEmpty())
@@ -59,7 +54,6 @@ public class CustomerService {
 
         return opFcmToken.get();
     }
-
     public LoginRes login(LoginReq loginReq){
         Optional<CustomerEntity> opCustomer=customerRepository.findCustomerEntityByEmail(loginReq.getEmail());
         if(opCustomer.isEmpty())
