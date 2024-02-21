@@ -257,7 +257,16 @@ public class PostService {
             );
         }).collect(Collectors.toList());
     }
-    public PostRes getUniquePost(Long postId) {
+    public PostRes getUniquePost(String token,Long postId) {
+        if(!jwtUtil.validateToken(token))
+            throw new GeneralException(ErrorCode.WRONG_TOKEN);
+        Long customerId= jwtUtil.getCustomerIdFromToken(token);
+        Boolean isLiked;
+        Optional<LikeEntity> opLike=likeRepository.findByCustomer_CustomerIdAndPost_PostId(customerId,postId);
+        if(opLike.isEmpty())
+            isLiked=false;
+        else
+            isLiked=true;
         try {
             PostEntity foundPost = postRepository.findById(postId).orElseThrow(PostDoesNotExistException::new);
             List<String> photoPaths = foundPost.getPhoto().stream()
@@ -272,7 +281,8 @@ public class PostService {
                     foundPost.getBody(),
                     photoPaths,
                     foundPost.getScrap(),
-                    foundPost.getType()
+                    foundPost.getType(),
+                    isLiked
             );
         } catch (PostDoesNotExistException ex) {
             throw new GeneralException(ErrorCode.POST_DOES_NOT_EXIST);
@@ -299,7 +309,6 @@ public class PostService {
         foundPost.setBody(postUpdateReq.getBody());
         foundPost.setType(postUpdateReq.getType());
         foundPost.setScrap(postUpdateReq.getScrap());
-
 
         //원래 포스트에 저장된 사진 중 사용자가 고른거
         List<String> photoPaths = postUpdateReq.getFilePaths();
@@ -380,6 +389,12 @@ public class PostService {
 
         // 변경된 foundPost를 저장
         postRepository.save(foundPost);
+        Optional<LikeEntity> opLike=likeRepository.findByCustomer_CustomerIdAndPost_PostId(customerId, postUpdateReq.getPostId());
+        Boolean isLiked;
+        if(opLike.isEmpty())
+            isLiked=false;
+        else
+            isLiked=true;
 
         return new PostRes(
                 foundPost.getPostId(),
@@ -390,7 +405,8 @@ public class PostService {
                 foundPost.getBody(),
                 photoPaths,
                 foundPost.getScrap(),
-                foundPost.getType()
+                foundPost.getType(),
+                isLiked
         );
     }
     public Boolean deletePost(String token,PostDeleteReq postDeleteReq){
@@ -596,12 +612,13 @@ public class PostService {
         Optional<CustomerEntity> opCustomer=customerRepository.findById(post.getCustomer().getCustomerId());
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
-
-        CustomerEntity giveCustomer=opCustomer.get();
-        CustomerEntity getCustomer=customerRepository.findById(customerId).get();
-
-        CustomerEntity customer=opCustomer.get();
-
+        CustomerEntity getCustomer=opCustomer.get();
+        CustomerEntity giveCustomer=customerRepository.findById(customerId).get();
+        if(giveCustomer==getCustomer)
+            throw new GeneralException(ErrorCode.CANNOT_GIVE_LIKE);
+        Optional<LikeEntity> opLikeEntity=likeRepository.findByCustomer_CustomerIdAndPost_PostId(customerId, post.getPostId());
+        if(opLikeEntity.isPresent())
+            throw new GeneralException(ErrorCode.CANNOT_GIVE_LIKE);
         LikeEntity like=LikeEntity.builder()
                 .post(post)
                 .customer(giveCustomer)
@@ -610,13 +627,11 @@ public class PostService {
         post.setLikes(post.getLikes()+1);
 
         getCustomer.setMyLikes(getCustomer.getMyLikes()+1);
-
-        customer.setMyLikes(customer.getMyLikes()+1);
-        if(customer.getFcmToken() != null) {
+        if(giveCustomer.getFcmToken() != null) {
             if (customerId != post.getCustomer().getCustomerId()) {
                 String targetToken = searchFCMTokenByPostId(likesReq.getPostId());
                 String postTitle = post.getTitle();
-                String customerName = customer.getCustomerName();
+                String customerName = giveCustomer.getCustomerName();
 
                 String message = customerName + "님이 " +
                         postTitle + " 글에 찜을 눌렀습니다.";
@@ -650,6 +665,11 @@ public class PostService {
         if(opCustomer.isEmpty())
             throw new GeneralException(ErrorCode.CUSTOMER_DOES_NOT_EXIST);
         CustomerEntity customer=opCustomer.get();
+        if(customerId== post.getCustomer().getCustomerId())
+            throw new GeneralException(ErrorCode.CANNOT_GIVE_SCRAP);
+        Optional<ScrapEntity> opScrapEntity=scrapRepository.findByCustomer_CustomerIdAndPost_PostId(customerId, post.getPostId());
+        if(opScrapEntity.isPresent())
+            throw new GeneralException(ErrorCode.CANNOT_GIVE_SCRAP);
         ScrapEntity scrap=ScrapEntity.builder()
                 .post(post)
                 .customer(customer)

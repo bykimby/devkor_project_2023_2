@@ -20,4 +20,5 @@ public class PostUpdateReq {
     private List<String> filePaths;
     private Long scrap;
     private String type;
+    private Boolean isliked;
 }

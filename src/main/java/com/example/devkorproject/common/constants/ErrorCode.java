@@ -34,7 +34,9 @@ public enum ErrorCode {
     WRONG_PASSWORD(10001,HttpStatus.BAD_REQUEST,"Password is wrong"),
     WRONG_TOKEN(10001,HttpStatus.BAD_REQUEST,"Token is wrong"),
     COMMENT_DOES_NOT_EXIST(10001,HttpStatus.BAD_REQUEST,"Comment does not exist"),
-    SIMPLE_DIET_HEART_FALSE(10001,HttpStatus.BAD_REQUEST,"This simple diet is not hearted.")
+    SIMPLE_DIET_HEART_FALSE(10001,HttpStatus.BAD_REQUEST,"This simple diet is not hearted."),
+    CANNOT_GIVE_LIKE(10001,HttpStatus.BAD_REQUEST,"Requested customer cannot give like."),
+    CANNOT_GIVE_SCRAP(10001,HttpStatus.BAD_REQUEST,"Requested customer cannot give scrap")
     ;
     private final Integer code;
     private final HttpStatus httpStatus;

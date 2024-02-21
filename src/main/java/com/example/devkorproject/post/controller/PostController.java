@@ -51,7 +51,8 @@ public class PostController {
     }
     @GetMapping("/unique")
     public HttpDataResponse<PostRes> getUniquePost(@RequestHeader("Authorization") String authHeader,@RequestParam Long postId){
-        return HttpDataResponse.of(postService.getUniquePost(postId));
+        String token=authHeader.substring(7);
+        return HttpDataResponse.of(postService.getUniquePost(token,postId));
     }
     @GetMapping("")
     public HttpDataResponse<List<GetPostRes>> getAllPosts(@RequestHeader("Authorization") String authHeader,@RequestParam Long startPostId){
