@@ -81,7 +81,7 @@ public class BabyService {
         babyEntity.setAllergy(babyModifyReqDto.getAllergy());
         babyEntity.setNeeds(babyModifyReqDto.getNeeds());
         babyRepository.save(babyEntity);
-        BabyModifyResDto babyModifyResDto=new BabyModifyResDto(babyEntity.getBabyName(), babyModifyReqDto.getBirth(), babyEntity.getAllergy(), babyModifyReqDto.getNeeds());
+        BabyModifyResDto babyModifyResDto=new BabyModifyResDto(babyEntity.getBabyId(),babyEntity.getBabyName(), babyModifyReqDto.getBirth(), babyEntity.getAllergy(), babyModifyReqDto.getNeeds());
         return babyModifyResDto;
     }
     public List<BabyModifyResDto> getCustomerBaby(String token){
@@ -98,6 +98,7 @@ public class BabyService {
         }
         return babyEntities.stream().map(baby -> {
             return new BabyModifyResDto(
+                    baby.getBabyId(),
                     baby.getBabyName(),
                     baby.getBirth().toString(),
                     baby.getAllergy(),
